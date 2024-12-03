@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 interface Field {
+  index: number;
   sprite: Phaser.GameObjects.Image;
   waterLevel: number;
   sunLevel: number;
@@ -37,6 +38,8 @@ class MyGame extends Phaser.Scene {
       const gridCols = 7;
       const gridRows = 4;
       const fieldSize = 64;
+
+      let fieldIndex = 0;
       
       // Create grid of fields with properties
       for (let row = 0; row < gridRows; row++) {
@@ -49,20 +52,24 @@ class MyGame extends Phaser.Scene {
           fieldSprite.setInteractive();
 
           let field: Field = {
+            index: fieldIndex,
             sprite: fieldSprite,
             waterLevel: 0,
             sunLevel: 0,
             plantLevel: 0
           };
 
-          const fieldIndex = this.fields.push(field) - 1;
+          // Add field object to array
+          this.fields.push(field);
+
+          // Increment field index
+          fieldIndex++;
 
           // Add event listener when player clicks on field
           fieldSprite.on('pointerdown', () => {
-            console.log(`Selected field: ${fieldIndex}`, field);
-          })
+            console.log('Selected field:', field);
+          });
 
-          this.fields.push(field);
         }
       }
 
