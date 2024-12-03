@@ -10,7 +10,13 @@ interface Field {
 
 class MyGame extends Phaser.Scene {
     private fields: Field[] = [];
-
+    private farmer: Phaser.GameObjects.Sprite | null = null;
+    private keyA: Phaser.Input.Keyboard.Key | undefined;
+    private keyS: Phaser.Input.Keyboard.Key | undefined;
+    private keyD: Phaser.Input.Keyboard.Key | undefined;
+    private keyW: Phaser.Input.Keyboard.Key | undefined;
+    private stage3Counter: number = 0;
+    private counterText: Phaser.GameObjects.Text | undefined;
     constructor() {
         super('game');
     }
@@ -28,9 +34,15 @@ class MyGame extends Phaser.Scene {
     }
 
     create() {
+      //WASD creation
+      this.keyA = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+      this.keyS = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+      this.keyD = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+      this.keyW = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+
       // Add background
-        let background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
-        background.setScale(0.86, 0.86);
+      let background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+      background.setScale(0.86, 0.86);
 
       // Define grid parameters
       const gridStartX = 60;
@@ -73,7 +85,56 @@ class MyGame extends Phaser.Scene {
         }
       }
 
-      console.log(this.fields);
+    console.log(this.fields);
+
+    // Stage 3 Plants Counters
+	this.counterText = this.add.text(
+		this.cameras.main.width / 2,
+		this.cameras.main.height - 6,
+		`Plants at stage 3: ${this.stage3Counter}`,
+		{ font: '20px Arial'}
+	);
+	this.counterText.setOrigin(0.5, 1);
+
+	// Temp counter increase
+	this.input?.keyboard?.on('keydown-SPACE', this.incrementCounter, this);
+    this.farmer = this.add.sprite(75, 75, 'farmer');
+    this.farmer.setScale(0.5, 0.5);
+
+	// Turn button
+    const button = this.add.text(400, 300, 'Click Me', {
+      fontSize: '32px',
+      backgroundColor: '#0088cc',
+      padding: { x: 20, y: 10 },
+      align: 'center'
+    });
+    button.setX(this.cameras.main.width - button.width - 10);
+    button.setY(10);
+    button.setInteractive();
+    button.on('pointerdown', () => {
+      console.log('hi');
+    });
+    }
+
+    update () {
+      //Player Movement
+      if (this.farmer) {
+      const moveSpeed = 3;
+      if (this.keyA!.isDown) {
+        this.farmer.x -= moveSpeed;
+      } else if (this.keyD!.isDown) {
+        this.farmer.x += moveSpeed;
+      }
+      if (this.keyW!.isDown) {
+        this.farmer.y -= moveSpeed;
+      } else if (this.keyS!.isDown) {
+        this.farmer.y += moveSpeed;
+      }
+      }
+    }
+    private incrementCounter() {
+    this.stage3Counter++;
+    this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
     }
 }
 
