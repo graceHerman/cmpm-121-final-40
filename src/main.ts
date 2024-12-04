@@ -213,22 +213,28 @@ class MyGame extends Phaser.Scene {
           const finalWaterThreshold = 100;
           const finalSunThreshold = 80;
 
-          if (field.waterLevel >= waterThreshold && field.sunLevel >= sunThreshold) {
+          // Gets neighboring plants and increases water threshold based on amount of neighbors
+          const neighborsWithPlants = this.getNeighbors(field).filter(neighbor => neighbor.plantLevel > 0).length;
+          const adjustedWaterThreshold = waterThreshold + 10 * neighborsWithPlants;
+          const finalAdjustedWaterThreshold = finalWaterThreshold + 10 * neighborsWithPlants;
+
+          if (field.waterLevel >= adjustedWaterThreshold && field.sunLevel >= sunThreshold) {
             if (field.plantLevel === 1) {
-              this.updatePlantTexture(field, 2);
-              field.waterLevel -= waterThreshold;
+                this.updatePlantTexture(field, 2);
+                field.waterLevel -= adjustedWaterThreshold;
             }
           }
 
-          if (field.waterLevel >= finalWaterThreshold && field.sunLevel >= finalSunThreshold) {
-            if (field.plantLevel === 2) {
-              this.updatePlantTexture(field, 3);
-              this.incrementCounter();
-              field.waterLevel -= finalWaterThreshold;
-            }
+          if (field.waterLevel >= finalAdjustedWaterThreshold && field.sunLevel >= finalSunThreshold) {
+              if (field.plantLevel === 2) {
+                  this.updatePlantTexture(field, 3);
+                  this.incrementCounter();
+                  field.waterLevel -= finalWaterThreshold;
+              }
           }
         }
       })
+
       if (this.stage3Counter >= 10) {
         this.winText = this.add.text(
           this.cameras.main.width / 2, 
@@ -375,6 +381,25 @@ class MyGame extends Phaser.Scene {
         return plantTextures[stage - 1];
     }
     return currentTexture; // If no next stage, return the current texture
+  }
+
+  // Get neighbor fields 
+  private getNeighbors(field: Field): Field[] {
+    const neighbors: Field[] = [];
+    const fieldIndex = field.index;
+    const gridCols = 7; 
+    const gridRows = 4;
+
+    const row = Math.floor(fieldIndex / gridCols);
+    const col = fieldIndex % gridCols;
+
+    // Check neighbors in 4 directions (up, down, left, right)
+    if (row > 0) neighbors.push(this.fields[fieldIndex - gridCols]);
+    if (row < gridRows - 1) neighbors.push(this.fields[fieldIndex + gridCols]);
+    if (col > 0) neighbors.push(this.fields[fieldIndex - 1]);
+    if (col < gridCols - 1) neighbors.push(this.fields[fieldIndex + 1]);
+
+    return neighbors;
   }
 }
 
