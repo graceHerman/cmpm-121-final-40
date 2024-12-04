@@ -19,6 +19,8 @@ class MyGame extends Phaser.Scene {
     private counterText: Phaser.GameObjects.Text | undefined;
     private waterText: Phaser.GameObjects.Text | undefined;
     private sunText: Phaser.GameObjects.Text | undefined;
+    private reapButton: Phaser.GameObjects.Text | undefined;
+    private sowButton: Phaser.GameObjects.Text | undefined;
     
     constructor() {
         super('game');
@@ -27,12 +29,15 @@ class MyGame extends Phaser.Scene {
     preload() {
         this.load.image('background', './Background.png');
         this.load.image('field', './Field.png');
-        this.load.image('sunflower1', './Sunflower1.png');
-        this.load.image('sunflower2', './Sunflower2.png');
-        this.load.image('sunflower3', './Sunflower3.png');
-        this.load.image('herb1', './Herb1.png');
-        this.load.image('herb2', './Herb2.png');
-        this.load.image('herb3', './Herb3.png');
+        this.load.image('Sunflower', './Sunflower1.png');
+        this.load.image('Sunflower2', './Sunflower2.png');
+        this.load.image('Sunflower3', './Sunflower3.png');
+        this.load.image('Herb', './Herb1.png');
+        this.load.image('Herb2', './Herb2.png');
+        this.load.image('Herb3', './Herb3.png');
+        this.load.image('Mushroom', './Mush1.png');
+        this.load.image('Mushroom2', './Mush2.png');
+        this.load.image('Mushroom3', './Mush3.png');
         this.load.image('farmer', './farmer.png');
     }
 
@@ -98,6 +103,7 @@ class MyGame extends Phaser.Scene {
                     return;
                 }
             }
+            this.handleFieldSelection(field);
 
             // Displays/Destroys water and sun level text
             if (this.waterText) {
@@ -195,12 +201,87 @@ class MyGame extends Phaser.Scene {
     // Randomly assigns value to each field's water and sun level
     private assignRandomLevels(): void {
       this.fields.forEach(field => {
-          field.waterLevel = Phaser.Math.Between(0, 100);
+          field.waterLevel += Phaser.Math.Between(0, 10);
           field.sunLevel = Phaser.Math.Between(0, 100);
       });
   
       console.log("Random levels assigned to fields:", this.fields);
     }
+
+    // Displays reap and sow buttons when player clicks on field
+    private handleFieldSelection(field: Field): void {
+      // Deselect the previous field
+      if (this.reapButton) this.reapButton.destroy();
+      if (this.sowButton) this.sowButton.destroy();
+
+
+      // Display Reap and Sow buttons
+      const buttonY = field.sprite.y - 20;
+      this.reapButton = this.add.text(field.sprite.x - 20, buttonY, 'Reap', {
+          fontSize: '14px',
+          backgroundColor: '#ff6666',
+          padding: { x: 7, y: 3 },
+      }).setInteractive();
+
+      this.sowButton = this.add.text(field.sprite.x + 30, buttonY, 'Sow', {
+          fontSize: '14px',
+          backgroundColor: '#66cc66',
+          padding: { x: 7, y: 3 },
+      }).setInteractive();
+
+      // Reap button functionality
+      this.reapButton.on('pointerdown', () => {
+          console.log(`Reaped field ${field.index}`);
+          // Additional logic for reaping (e.g., resetting levels, clearing plants)
+          if (field.sprite.texture.key !== 'field') {
+              field.sprite.setTexture('field');
+          }
+      });
+
+      // Sow button functionality
+      this.sowButton.on('pointerdown', () => {
+          this.showSowMenu(field);
+      });
+
+      this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+        const clickedField = currentlyOver.find(obj => this.fields.some(field => field.sprite === obj));
+
+        if (!clickedField && this.reapButton) {
+          this.reapButton.destroy();
+        }
+
+        if (!clickedField && this.sowButton) {
+          this.sowButton.destroy();
+        }
+      });
+  }
+
+  // Displays plant choices after player clicks sow
+  private showSowMenu(field: Field): void {
+      // Show plant choices near the selected field
+      const options = ['Sunflower', 'Mushroom', 'Herb'];
+      const optionY = field.sprite.y - 20;
+      const choiceTexts: Phaser.GameObjects.Text[] = [];
+
+      options.forEach((key, index) => {
+        // Create button for each option
+          const choiceText = this.add.text((field.sprite.x + index * 80)-80, optionY, key, {
+              fontSize: '12px',
+              backgroundColor: '#358f39',
+              padding: { x: 5, y: 2 },
+          }).setInteractive();
+
+          // Update field with plant image
+          choiceText.on('pointerdown', () => {
+              console.log(`Planted ${key} on field ${field.index}`);
+              field.sprite.setTexture(key);
+              field.plantLevel = 1;
+              choiceTexts.forEach(text => text.destroy());
+          });
+
+          choiceTexts.push(choiceText);
+      });
+  }
 }
 
 const config: Phaser.Types.Core.GameConfig = {
