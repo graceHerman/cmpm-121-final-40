@@ -24,6 +24,9 @@ class MyGame extends Phaser.Scene {
     private sunText: Phaser.GameObjects.Text | undefined;
     private reapButton: Phaser.GameObjects.Text | undefined;
     private sowButton: Phaser.GameObjects.Text | undefined;
+
+    private undoStack: Field[][] = []; // Stack for undo
+    private redoStack: Field[][] = []; // Stack for redo
     
     constructor() {
         super('game');
@@ -186,7 +189,7 @@ class MyGame extends Phaser.Scene {
         this.dayCounter++;
         this.dayText?.setText(`Days: ${this.dayCounter}`);
         this.assignRandomLevels();
-        this.saveGameState();
+        // this.saveGameState();
       });
 
       const savedState = localStorage.getItem('gameState');
@@ -268,6 +271,38 @@ setInterval(() => {
   this.saveGameState();
   console.log("Game auto-saved");
 }, 60000); // 60,000 milliseconds = 1 minute
+
+// Create Undo Button
+const undoButton = this.add.text(180, this.cameras.main.height - 500, '<-', {
+  fontSize: '20px',
+  backgroundColor: '#e74c3c',
+  padding: { x: 20, y: 10 },
+  align: 'center'
+}).setInteractive();
+
+undoButton.on('pointerdown', () => {
+  this.undo();
+});
+
+// Create Redo Button
+const redoButton = this.add.text(250, this.cameras.main.height - 500, '->', {
+  fontSize: '20px',
+  backgroundColor: '#2980b9',
+  padding: { x: 20, y: 10 },
+  align: 'center'
+}).setInteractive();
+
+redoButton.on('pointerdown', () => {
+  this.redo();
+});
+
+// Add event listener when player clicks on field
+this.fields.forEach(field => {
+  field.sprite.on('pointerdown', () => {
+      this.handleFieldSelection(field);
+      this.saveGameState(); // Save state every time a change happens
+  });
+});
 
     }
 
@@ -503,6 +538,20 @@ setInterval(() => {
       dayCounter: this.dayCounter,
       stage3Counter: this.stage3Counter,
     };
+
+    // Copy the fields to create a snapshot
+    const fieldState: Field[] = this.fields.map(field => ({
+      index: field.index,
+      sprite: field.sprite,  // Note: You may need to omit or handle sprite references
+      waterLevel: field.waterLevel,
+      sunLevel: field.sunLevel,
+      plantLevel: field.plantLevel
+    }));
+    // Push the snapshot to the undo stack
+    this.undoStack.push(fieldState);
+
+    // Clear redo stack since new action was made
+    this.redoStack = [];
     localStorage.setItem('gameState', JSON.stringify(gameState));
     console.log('game saved ^-^');
   }
@@ -586,6 +635,62 @@ setInterval(() => {
       console.log('Game loaded from load button');
     }
   }
+
+
+    // Undo the last action by restoring the previous state
+    private undo(): void {
+      if (this.undoStack.length > 0) {
+        // Pop the last state from the undo stack
+        const previousState = this.undoStack.pop();
+        
+        if (previousState) {
+          // Push the current state to redo stack before undoing
+          this.redoStack.push(this.fields.map(field => ({
+            index: field.index,
+            sprite: field.sprite,
+            waterLevel: field.waterLevel,
+            sunLevel: field.sunLevel,
+            plantLevel: field.plantLevel
+          })));
+  
+          // Restore the previous state
+          this.fields.forEach((field, index) => {
+            const state = previousState[index];
+            field.waterLevel = state.waterLevel;
+            field.sunLevel = state.sunLevel;
+            field.plantLevel = state.plantLevel;
+          });
+        }
+      }
+  }
+
+  // Redo the last undone action by restoring the next state
+  private redo(): void {
+    if (this.redoStack.length > 0) {
+      // Pop the last state from the redo stack
+      const nextState = this.redoStack.pop();
+
+      if (nextState) {
+        // Push the current state to undo stack before redoing
+        this.undoStack.push(this.fields.map(field => ({
+          index: field.index,
+          sprite: field.sprite,
+          waterLevel: field.waterLevel,
+          sunLevel: field.sunLevel,
+          plantLevel: field.plantLevel
+        })));
+
+        // Restore the next state
+        this.fields.forEach((field, index) => {
+          const state = nextState[index];
+          field.waterLevel = state.waterLevel;
+          field.sunLevel = state.sunLevel;
+          field.plantLevel = state.plantLevel;
+        });
+      }
+    }
+  }
+
 }
 
 
