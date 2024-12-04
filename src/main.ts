@@ -189,7 +189,7 @@ class MyGame extends Phaser.Scene {
         this.dayCounter++;
         this.dayText?.setText(`Days: ${this.dayCounter}`);
         this.assignRandomLevels();
-        // this.saveGameState();
+        this.saveGameState();
       });
 
       const savedState = localStorage.getItem('gameState');
@@ -300,7 +300,7 @@ redoButton.on('pointerdown', () => {
 this.fields.forEach(field => {
   field.sprite.on('pointerdown', () => {
       this.handleFieldSelection(field);
-      this.saveGameState(); // Save state every time a change happens
+      //this.saveGameState(); // Save state every time a change happens
   });
 });
 
@@ -421,6 +421,7 @@ this.fields.forEach(field => {
       // Sow button functionality
       this.sowButton.on('pointerdown', () => {
           this.showSowMenu(field);
+          this.saveGameState();
       });
 
       this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
@@ -433,7 +434,7 @@ this.fields.forEach(field => {
         if (!clickedField && this.sowButton) {
           this.sowButton.destroy();
         }
-        this.saveGameState();
+        //this.saveGameState();
       });
   }
 
@@ -539,19 +540,21 @@ this.fields.forEach(field => {
       stage3Counter: this.stage3Counter,
     };
 
-    // Copy the fields to create a snapshot
-    const fieldState: Field[] = this.fields.map(field => ({
-      index: field.index,
-      sprite: field.sprite,  // Note: You may need to omit or handle sprite references
-      waterLevel: field.waterLevel,
-      sunLevel: field.sunLevel,
-      plantLevel: field.plantLevel
-    }));
-    // Push the snapshot to the undo stack
-    this.undoStack.push(fieldState);
+    // Save the current game state to the undo stack
+  const currentState = this.fields.map(field => ({
+    index: field.index,
+    waterLevel: field.waterLevel,
+    sunLevel: field.sunLevel,
+    plantLevel: field.plantLevel
+  }));
 
-    // Clear redo stack since new action was made
-    this.redoStack = [];
+  this.undoStack.push(currentState);
+
+  // Save the game state to local storage
+  localStorage.setItem('gameState', JSON.stringify(currentState));
+  
+  // Clear redo stack whenever a new state is saved
+  this.redoStack = [];
     localStorage.setItem('gameState', JSON.stringify(gameState));
     console.log('game saved ^-^');
   }
@@ -636,60 +639,41 @@ this.fields.forEach(field => {
     }
   }
 
-
-    // Undo the last action by restoring the previous state
-    private undo(): void {
-      if (this.undoStack.length > 0) {
-        // Pop the last state from the undo stack
-        const previousState = this.undoStack.pop();
-        
-        if (previousState) {
-          // Push the current state to redo stack before undoing
-          this.redoStack.push(this.fields.map(field => ({
-            index: field.index,
-            sprite: field.sprite,
-            waterLevel: field.waterLevel,
-            sunLevel: field.sunLevel,
-            plantLevel: field.plantLevel
-          })));
-  
-          // Restore the previous state
-          this.fields.forEach((field, index) => {
-            const state = previousState[index];
-            field.waterLevel = state.waterLevel;
-            field.sunLevel = state.sunLevel;
-            field.plantLevel = state.plantLevel;
-          });
-        }
-      }
-  }
-
-  // Redo the last undone action by restoring the next state
-  private redo(): void {
-    if (this.redoStack.length > 0) {
-      // Pop the last state from the redo stack
-      const nextState = this.redoStack.pop();
-
-      if (nextState) {
-        // Push the current state to undo stack before redoing
-        this.undoStack.push(this.fields.map(field => ({
-          index: field.index,
-          sprite: field.sprite,
-          waterLevel: field.waterLevel,
-          sunLevel: field.sunLevel,
-          plantLevel: field.plantLevel
-        })));
-
-        // Restore the next state
-        this.fields.forEach((field, index) => {
-          const state = nextState[index];
-          field.waterLevel = state.waterLevel;
-          field.sunLevel = state.sunLevel;
-          field.plantLevel = state.plantLevel;
-        });
-      }
+  private undo(): void {
+    if (this.undoStack.length > 0) {
+      const previousState = this.undoStack.pop();
+      this.redoStack.push(this.getCurrentState());  // Push current state to redo stack
+      this.loadState(previousState);
     }
   }
+  
+  private redo(): void {
+    if (this.redoStack.length > 0) {
+      const nextState = this.redoStack.pop();
+      this.undoStack.push(this.getCurrentState());  // Push current state to undo stack
+      this.loadState(nextState);
+    }
+  }
+  
+  private getCurrentState(): any {
+    return this.fields.map(field => ({
+      index: field.index,
+      waterLevel: field.waterLevel,
+      sunLevel: field.sunLevel,
+      plantLevel: field.plantLevel
+    }));
+  }
+  
+  private loadState(state: any): void {
+    state.forEach((fieldState: any, index: number) => {
+      const field = this.fields[index];
+      field.waterLevel = fieldState.waterLevel;
+      field.sunLevel = fieldState.sunLevel;
+      field.plantLevel = fieldState.plantLevel;
+    });
+    // Optionally update the UI or display the new state.
+  }
+  
 
 }
 
