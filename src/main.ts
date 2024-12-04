@@ -17,6 +17,9 @@ class MyGame extends Phaser.Scene {
     private keyW: Phaser.Input.Keyboard.Key | undefined;
     private stage3Counter: number = 0;
     private counterText: Phaser.GameObjects.Text | undefined;
+    private dayCounter: number = 0;
+    private dayText: Phaser.GameObjects.Text | undefined;
+    private winText: Phaser.GameObjects.Text | undefined;
     private waterText: Phaser.GameObjects.Text | undefined;
     private sunText: Phaser.GameObjects.Text | undefined;
     private reapButton: Phaser.GameObjects.Text | undefined;
@@ -113,7 +116,7 @@ class MyGame extends Phaser.Scene {
                 this.scale.width / 20,
                 this.scale.height / 14,
                 `Water Level: ${field.waterLevel}`,
-                { color: '#fff', fontSize: 20 }
+                { font: '22px Arial', color: '#fff', fontSize: 20 }
             );
         
             if (this.sunText) {
@@ -121,9 +124,9 @@ class MyGame extends Phaser.Scene {
             }
             this.sunText = this.add.text(
                 this.scale.width / 20,
-                this.scale.height / 14 - 20,
+                this.scale.height / 14 - 25,
                 `Sun Level: ${field.sunLevel}`,
-                { color: '#fff', fontSize: 20 }
+                { font: '22px Arial', color: '#fff', fontSize: 20 }
             );
           });
 
@@ -153,15 +156,24 @@ class MyGame extends Phaser.Scene {
       );
       this.counterText.setOrigin(0.5, 1);
 
-      // Temp counter increase
-      this.input?.keyboard?.on('keydown-SPACE', this.incrementCounter, this);
+      // Add Farmer
       this.farmer = this.add.sprite(75, 75, 'farmer');
       this.farmer.setScale(0.5, 0.5);
 
+      // Turn Counter
+      this.dayText = this.add.text(
+        50,
+        this.cameras.main.height - 6,
+        `Days: ${this.dayCounter}`,
+        { font: '20px Arial'}
+      );
+      this.dayText.setOrigin(0.5, 1);
+
+
       // Turn button
-      const button = this.add.text(400, 300, 'Click Me', {
-        fontSize: '32px',
-        backgroundColor: '#0088cc',
+      const button = this.add.text(400, 300, 'Next Day', {
+        fontSize: '20px',
+        backgroundColor: '#21a99c',
         padding: { x: 20, y: 10 },
         align: 'center'
       });
@@ -171,7 +183,8 @@ class MyGame extends Phaser.Scene {
 
       // Randomize water and sun levels when button is clicked
       button.on('pointerdown', () => {
-        console.log('hi');
+        this.dayCounter++;
+        this.dayText?.setText(`Days: ${this.dayCounter}`);
         this.assignRandomLevels();
       });
     }
@@ -190,6 +203,43 @@ class MyGame extends Phaser.Scene {
       } else if (this.keyS!.isDown) {
         this.farmer.y += moveSpeed;
       }
+      }
+
+      // Check water and sun levels for plant growth
+      this.fields.forEach(field => {
+        if (field.plantLevel > 0) {
+          const waterThreshold = 50;
+          const sunThreshold = 50;
+          const finalWaterThreshold = 100;
+          const finalSunThreshold = 80;
+
+          if (field.waterLevel >= waterThreshold && field.sunLevel >= sunThreshold) {
+            if (field.plantLevel === 1) {
+              this.updatePlantTexture(field, 2);
+              field.waterLevel -= waterThreshold;
+            }
+          }
+
+          if (field.waterLevel >= finalWaterThreshold && field.sunLevel >= finalSunThreshold) {
+            if (field.plantLevel === 2) {
+              this.updatePlantTexture(field, 3);
+              this.incrementCounter();
+              field.waterLevel -= finalWaterThreshold;
+            }
+          }
+        }
+      })
+      if (this.stage3Counter >= 10) {
+        this.winText = this.add.text(
+          this.cameras.main.width / 2, 
+          this.cameras.main.height / 2, 
+          `You Win!`,
+          { font: '100px Arial',
+            fontStyle: 'bold',
+            color: '#21a99c'
+           }
+        );
+        this.winText.setOrigin(0.5, 0.5);
       }
     }
 
@@ -235,6 +285,12 @@ class MyGame extends Phaser.Scene {
           // Additional logic for reaping (e.g., resetting levels, clearing plants)
           if (field.sprite.texture.key !== 'field') {
               field.sprite.setTexture('field');
+              if (field.plantLevel === 3) {
+                console.log('dex');
+                this.stage3Counter -= 1;
+                this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+              }
+              field.plantLevel = 0;
           }
       });
 
@@ -282,7 +338,46 @@ class MyGame extends Phaser.Scene {
           choiceTexts.push(choiceText);
       });
   }
+
+  // Updates plant texture to next stage
+  private updatePlantTexture(field: Field, nextStage: number) {
+    let textureKey = '';
+
+    switch (nextStage) {
+      case 2:
+        textureKey = this.getNextPlantTexture(field.sprite.texture.key, 2);
+        break;
+      case 3: 
+        textureKey = this.getNextPlantTexture(field.sprite.texture.key, 3);
+        break;
+    }
+
+    if (textureKey) {
+      field.sprite.setTexture(textureKey);
+      field.plantLevel = nextStage;
+      console.log(nextStage);
+    }
+  }
+
+  // Gets next plant texture
+  private getNextPlantTexture(currentTexture: string, stage: number): string {
+    const plantMap: { [key: string]: string[] } = {
+        'Sunflower': ['Sunflower', 'Sunflower2', 'Sunflower3', 'Sunflower3'],
+        'Mushroom': ['Mushroom', 'Mushroom2', 'Mushroom3', 'Mushroom3'],
+        'Herb': ['Herb', 'Herb2', 'Herb3', 'Herb3'],
+    };
+
+    // Find the current plant's texture list based on the texture key
+    const plantTextures = plantMap[currentTexture.split('2')[0] || currentTexture.split('3')[0]];
+    
+    // Return the next texture based on the current stage
+    if (stage < plantTextures.length) {
+        return plantTextures[stage - 1];
+    }
+    return currentTexture; // If no next stage, return the current texture
+  }
 }
+
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
