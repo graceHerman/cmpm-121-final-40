@@ -195,7 +195,7 @@ class MyGame extends Phaser.Scene {
       const savedState = localStorage.getItem('gameState');
       if (savedState)
       {
-        const promptText = this.add.text(this.scale.width / 2, this.scale.height / 2,
+        const promptText = this.add.text(250, 200,
         'Continue previous game? (Y/N)', 
             { font: '20px Arial', color: '#fff' }
         ).setOrigin(0.5, 0.5);
@@ -217,7 +217,7 @@ class MyGame extends Phaser.Scene {
       }
 
       // Save Button
-const saveButton = this.add.text(10, this.cameras.main.height - 450, 'Save Game', {
+const saveButton = this.add.text(353, 100, 'Save Game', {
   fontSize: '20px',
   backgroundColor: '#f39c12',
   padding: { x: 20, y: 10 },
@@ -225,11 +225,40 @@ const saveButton = this.add.text(10, this.cameras.main.height - 450, 'Save Game'
 }).setInteractive();
 
 saveButton.on('pointerdown', () => {
-  this.saveGame();
+  //this.saveGame();
+  const loadState = localStorage.getItem('game');
+      if (loadState)
+      {
+        const promptText = this.add.text(250, 200,
+        '1    2    3', 
+            { font: '20px Arial', color: '#fff' }
+        ).setOrigin(0.5, 0.5);
+
+        if (this.input?.keyboard) {
+          const key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+          const key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+          const key3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+      
+          key1.once('down', () => {
+              this.saveGame('1');
+              promptText.destroy();
+          });
+      
+          key2.once('down', () => {
+            this.saveGame('2');
+              promptText.destroy();
+          });
+
+          key3.once('down', () => {
+            this.saveGame('3');
+              promptText.destroy();
+          });
+        }
+      }
 });
 
 // Load Button
-const loadButton = this.add.text(10, this.cameras.main.height - 500, 'Load Game', {
+const loadButton = this.add.text(353, 55, 'Load Game', {
   fontSize: '20px',
   backgroundColor: '#2980b9',
   padding: { x: 20, y: 10 },
@@ -240,7 +269,7 @@ loadButton.on('pointerdown', () => {
   const loadState = localStorage.getItem('game');
       if (loadState)
       {
-        const promptText = this.add.text(this.scale.width / 2, this.scale.height / 2,
+        const promptText = this.add.text(250, 200,
         'Continue from auto-save(Y) or save(N)? (Y/N)', 
             { font: '20px Arial', color: '#fff' }
         ).setOrigin(0.5, 0.5);
@@ -255,14 +284,38 @@ loadButton.on('pointerdown', () => {
           });
       
           keyS.once('down', () => {
-            this.loadGame();
+            //this.loadGame();
               promptText.destroy();
+              const promptTexts = this.add.text(250, 200,
+                '1    2    3', 
+                    { font: '20px Arial', color: '#fff' }
+                ).setOrigin(0.5, 0.5);
+                if (this.input?.keyboard) {
+                  const key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+                  const key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+                  const key3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+
+                  key1.once('down', () => {
+                    this.loadGame('1');
+                    promptTexts.destroy();
+                  });
+
+                  key2.once('down', () => {
+                    this.loadGame('2');
+                    promptTexts.destroy();
+                  });
+
+                  key3.once('down', () => {
+                    this.loadGame('3');
+                    promptTexts.destroy();
+                  });
+                }
           });
         }
       }
       else {
         console.log("No save state found.");
-        this.loadGame();
+        this.loadGameState();
       }
 });
 
@@ -434,7 +487,7 @@ this.fields.forEach(field => {
         if (!clickedField && this.sowButton) {
           this.sowButton.destroy();
         }
-        //this.saveGameState();
+        this.saveGameState();
       });
   }
 
@@ -540,7 +593,7 @@ this.fields.forEach(field => {
       stage3Counter: this.stage3Counter,
     };
 
-    // Save the current game state to the undo stack
+    /*// Save the current game state to the undo stack
   const currentState = this.fields.map(field => ({
     index: field.index,
     waterLevel: field.waterLevel,
@@ -554,32 +607,10 @@ this.fields.forEach(field => {
   localStorage.setItem('gameState', JSON.stringify(currentState));
   
   // Clear redo stack whenever a new state is saved
-  this.redoStack = [];
+  this.redoStack = [];*/
     localStorage.setItem('gameState', JSON.stringify(gameState));
     console.log('game saved ^-^');
   }
-
-  private saveGame(): void
-  {
-    const gameState = {
-      fields: this.fields.map(field => ({
-        index: field.index,
-        waterLevel: field.waterLevel,
-        sunLevel: field.sunLevel,
-        plantLevel: field.plantLevel,
-        texture: field.sprite.texture.key,
-      })),
-      farmer: {
-        x: this.farmer?.x || 0,
-        y: this.farmer?.y || 0,
-      },
-      dayCounter: this.dayCounter,
-      stage3Counter: this.stage3Counter,
-    };
-    localStorage.setItem('game', JSON.stringify(gameState));
-    console.log('saved game from saved button');
-  }
-
 
   private loadGameState(): void
   {
@@ -610,9 +641,30 @@ this.fields.forEach(field => {
     }
   }
 
-  private loadGame(): void
+  private saveGame(name: string): void
   {
-    const savedState = localStorage.getItem('game');
+    const gameState = {
+      fields: this.fields.map(field => ({
+        index: field.index,
+        waterLevel: field.waterLevel,
+        sunLevel: field.sunLevel,
+        plantLevel: field.plantLevel,
+        texture: field.sprite.texture.key,
+      })),
+      farmer: {
+        x: this.farmer?.x || 0,
+        y: this.farmer?.y || 0,
+      },
+      dayCounter: this.dayCounter,
+      stage3Counter: this.stage3Counter,
+    };
+    localStorage.setItem(name, JSON.stringify(gameState));
+    console.log('saved game from saved file ' + name);
+  }
+
+  private loadGame(name: string): void
+  {
+    const savedState = localStorage.getItem(name);
     if (savedState)
     {
       const gameState = JSON.parse(savedState);
@@ -635,7 +687,7 @@ this.fields.forEach(field => {
       this.stage3Counter = gameState.stage3Counter;
       this.dayText?.setText(`Days: ${this.dayCounter}`);
       this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
-      console.log('Game loaded from load button');
+      console.log('Game loaded from save file ' + name);
     }
   }
 
