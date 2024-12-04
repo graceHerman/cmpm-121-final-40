@@ -188,6 +188,7 @@ class MyGame extends Phaser.Scene {
         this.assignRandomLevels();
         this.saveGameState();
       });
+
       const savedState = localStorage.getItem('gameState');
       if (savedState)
       {
@@ -211,6 +212,63 @@ class MyGame extends Phaser.Scene {
           });
         }
       }
+
+      // Save Button
+const saveButton = this.add.text(10, this.cameras.main.height - 450, 'Save Game', {
+  fontSize: '20px',
+  backgroundColor: '#f39c12',
+  padding: { x: 20, y: 10 },
+  align: 'center'
+}).setInteractive();
+
+saveButton.on('pointerdown', () => {
+  this.saveGame();
+});
+
+// Load Button
+const loadButton = this.add.text(10, this.cameras.main.height - 500, 'Load Game', {
+  fontSize: '20px',
+  backgroundColor: '#2980b9',
+  padding: { x: 20, y: 10 },
+  align: 'center'
+}).setInteractive();
+
+loadButton.on('pointerdown', () => {
+  const loadState = localStorage.getItem('game');
+      if (loadState)
+      {
+        const promptText = this.add.text(this.scale.width / 2, this.scale.height / 2,
+        'Continue from auto-save(Y) or save(N)? (Y/N)', 
+            { font: '20px Arial', color: '#fff' }
+        ).setOrigin(0.5, 0.5);
+
+        if (this.input?.keyboard) {
+          const keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+          const keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+      
+          keyA.once('down', () => {
+              this.loadGameState();
+              promptText.destroy();
+          });
+      
+          keyS.once('down', () => {
+            this.loadGame();
+              promptText.destroy();
+          });
+        }
+      }
+      else {
+        console.log("No save state found.");
+        this.loadGame();
+      }
+});
+
+// Auto-save every 60 seconds (60000 milliseconds)
+setInterval(() => {
+  this.saveGameState();
+  console.log("Game auto-saved");
+}, 60000); // 60,000 milliseconds = 1 minute
+
     }
 
     update () {
@@ -427,6 +485,7 @@ class MyGame extends Phaser.Scene {
 
     return neighbors;
   }
+
   private saveGameState(): void
   {
     const gameState = {
@@ -447,6 +506,29 @@ class MyGame extends Phaser.Scene {
     localStorage.setItem('gameState', JSON.stringify(gameState));
     console.log('game saved ^-^');
   }
+
+  private saveGame(): void
+  {
+    const gameState = {
+      fields: this.fields.map(field => ({
+        index: field.index,
+        waterLevel: field.waterLevel,
+        sunLevel: field.sunLevel,
+        plantLevel: field.plantLevel,
+        texture: field.sprite.texture.key,
+      })),
+      farmer: {
+        x: this.farmer?.x || 0,
+        y: this.farmer?.y || 0,
+      },
+      dayCounter: this.dayCounter,
+      stage3Counter: this.stage3Counter,
+    };
+    localStorage.setItem('game', JSON.stringify(gameState));
+    console.log('saved game from saved button');
+  }
+
+
   private loadGameState(): void
   {
     const savedState = localStorage.getItem('gameState');
@@ -473,6 +555,35 @@ class MyGame extends Phaser.Scene {
       this.dayText?.setText(`Days: ${this.dayCounter}`);
       this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
       console.log('Game loaded :3');
+    }
+  }
+
+  private loadGame(): void
+  {
+    const savedState = localStorage.getItem('game');
+    if (savedState)
+    {
+      const gameState = JSON.parse(savedState);
+      this.fields.forEach((field, index) => {
+        const savedField = gameState.fields[index];
+        if (savedField)
+        {
+          field.waterLevel = savedField.waterLevel;
+          field.sunLevel = savedField.sunLevel;
+          field.plantLevel = savedField.plantLevel;
+          field.sprite.setTexture(savedField.texture);
+        }
+      });
+      if (this.farmer)
+      {
+        this.farmer.x = gameState.farmer.x;
+        this.farmer.y = gameState.farmer.y;
+      }
+      this.dayCounter = gameState.dayCounter;
+      this.stage3Counter = gameState.stage3Counter;
+      this.dayText?.setText(`Days: ${this.dayCounter}`);
+      this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+      console.log('Game loaded from load button');
     }
   }
 }
