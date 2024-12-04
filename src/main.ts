@@ -17,6 +17,9 @@ class MyGame extends Phaser.Scene {
     private keyW: Phaser.Input.Keyboard.Key | undefined;
     private stage3Counter: number = 0;
     private counterText: Phaser.GameObjects.Text | undefined;
+    private waterText: Phaser.GameObjects.Text | undefined;
+    private sunText: Phaser.GameObjects.Text | undefined;
+    
     constructor() {
         super('game');
     }
@@ -50,7 +53,6 @@ class MyGame extends Phaser.Scene {
       const gridCols = 7;
       const gridRows = 4;
       const fieldSize = 64;
-
       let fieldIndex = 0;
       
       // Create grid of fields with properties
@@ -79,41 +81,93 @@ class MyGame extends Phaser.Scene {
 
           // Add event listener when player clicks on field
           fieldSprite.on('pointerdown', () => {
-            console.log('Selected field:', field);
+            if (this.farmer) {
+                // Calculate the distance between the farmer and the field
+                const distance = Phaser.Math.Distance.Between(
+                    this.farmer.x, 
+                    this.farmer.y, 
+                    field.sprite.x + field.sprite.displayWidth / 2,
+                    field.sprite.y + field.sprite.displayHeight / 2,
+                );
+        
+                const range = 130; // Define the range in pixels
+                
+                // Message if player is out of range
+                if (distance > range) {
+                    console.log(`Field ${field.index} is out of range (${distance.toFixed(1)}px).`);
+                    return;
+                }
+            }
+
+            // Displays/Destroys water and sun level text
+            if (this.waterText) {
+                this.waterText.destroy();
+            }
+            this.waterText = this.add.text(
+                this.scale.width / 20,
+                this.scale.height / 14,
+                `Water Level: ${field.waterLevel}`,
+                { color: '#fff', fontSize: 20 }
+            );
+        
+            if (this.sunText) {
+                this.sunText.destroy();
+            }
+            this.sunText = this.add.text(
+                this.scale.width / 20,
+                this.scale.height / 14 - 20,
+                `Sun Level: ${field.sunLevel}`,
+                { color: '#fff', fontSize: 20 }
+            );
           });
 
+          // Destroys water and sun level text if player clicks off a field
+          this.input.on('pointerdown', (_pointer: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+            const clickedField = currentlyOver.find(obj => this.fields.some(field => field.sprite === obj));
+    
+            if (!clickedField && this.waterText) {
+              this.waterText.destroy();
+              this.waterText = undefined;
+            }
+
+            if (!clickedField && this.sunText) {
+              this.sunText.destroy();
+              this.sunText = undefined;
+            }
+          });
         }
       }
 
-    console.log(this.fields);
+      // Stage 3 Plants Counters
+      this.counterText = this.add.text(
+        this.cameras.main.width / 2,
+        this.cameras.main.height - 6,
+        `Plants at stage 3: ${this.stage3Counter}`,
+        { font: '20px Arial'}
+      );
+      this.counterText.setOrigin(0.5, 1);
 
-    // Stage 3 Plants Counters
-	this.counterText = this.add.text(
-		this.cameras.main.width / 2,
-		this.cameras.main.height - 6,
-		`Plants at stage 3: ${this.stage3Counter}`,
-		{ font: '20px Arial'}
-	);
-	this.counterText.setOrigin(0.5, 1);
+      // Temp counter increase
+      this.input?.keyboard?.on('keydown-SPACE', this.incrementCounter, this);
+      this.farmer = this.add.sprite(75, 75, 'farmer');
+      this.farmer.setScale(0.5, 0.5);
 
-	// Temp counter increase
-	this.input?.keyboard?.on('keydown-SPACE', this.incrementCounter, this);
-    this.farmer = this.add.sprite(75, 75, 'farmer');
-    this.farmer.setScale(0.5, 0.5);
+      // Turn button
+      const button = this.add.text(400, 300, 'Click Me', {
+        fontSize: '32px',
+        backgroundColor: '#0088cc',
+        padding: { x: 20, y: 10 },
+        align: 'center'
+      });
+      button.setX(this.cameras.main.width - button.width - 10);
+      button.setY(10);
+      button.setInteractive();
 
-	// Turn button
-    const button = this.add.text(400, 300, 'Click Me', {
-      fontSize: '32px',
-      backgroundColor: '#0088cc',
-      padding: { x: 20, y: 10 },
-      align: 'center'
-    });
-    button.setX(this.cameras.main.width - button.width - 10);
-    button.setY(10);
-    button.setInteractive();
-    button.on('pointerdown', () => {
-      console.log('hi');
-    });
+      // Randomize water and sun levels when button is clicked
+      button.on('pointerdown', () => {
+        console.log('hi');
+        this.assignRandomLevels();
+      });
     }
 
     update () {
@@ -132,9 +186,20 @@ class MyGame extends Phaser.Scene {
       }
       }
     }
+
     private incrementCounter() {
-    this.stage3Counter++;
-    this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+      this.stage3Counter++;
+      this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+    }
+
+    // Randomly assigns value to each field's water and sun level
+    private assignRandomLevels(): void {
+      this.fields.forEach(field => {
+          field.waterLevel = Phaser.Math.Between(0, 100);
+          field.sunLevel = Phaser.Math.Between(0, 100);
+      });
+  
+      console.log("Random levels assigned to fields:", this.fields);
     }
 }
 
