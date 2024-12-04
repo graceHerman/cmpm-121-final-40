@@ -230,7 +230,7 @@ saveButton.on('pointerdown', () => {
       if (loadState)
       {
         const promptText = this.add.text(250, 200,
-        '1    2    3', 
+        'Click on keys: 1    2    3    B', 
             { font: '20px Arial', color: '#fff' }
         ).setOrigin(0.5, 0.5);
 
@@ -238,6 +238,7 @@ saveButton.on('pointerdown', () => {
           const key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
           const key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
           const key3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+          const keyB = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
       
           key1.once('down', () => {
               this.saveGame('1');
@@ -251,6 +252,10 @@ saveButton.on('pointerdown', () => {
 
           key3.once('down', () => {
             this.saveGame('3');
+              promptText.destroy();
+          });
+
+          keyB.once('down', () => {
               promptText.destroy();
           });
         }
@@ -287,13 +292,14 @@ loadButton.on('pointerdown', () => {
             //this.loadGame();
               promptText.destroy();
               const promptTexts = this.add.text(250, 200,
-                '1    2    3', 
+                'Click on keys: 1    2    3    B', 
                     { font: '20px Arial', color: '#fff' }
                 ).setOrigin(0.5, 0.5);
                 if (this.input?.keyboard) {
                   const key1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
                   const key2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
                   const key3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+                  const keyB = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.B);
 
                   key1.once('down', () => {
                     this.loadGame('1');
@@ -309,6 +315,10 @@ loadButton.on('pointerdown', () => {
                     this.loadGame('3');
                     promptTexts.destroy();
                   });
+
+                  keyB.once('down', () => {
+                    promptTexts.destroy();
+                });
                 }
           });
         }
