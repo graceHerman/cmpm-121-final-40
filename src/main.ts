@@ -186,7 +186,31 @@ class MyGame extends Phaser.Scene {
         this.dayCounter++;
         this.dayText?.setText(`Days: ${this.dayCounter}`);
         this.assignRandomLevels();
+        this.saveGameState();
       });
+      const savedState = localStorage.getItem('gameState');
+      if (savedState)
+      {
+        const promptText = this.add.text(this.scale.width / 2, this.scale.height / 2,
+        'Continue previous game? (Y/N)', 
+            { font: '20px Arial', color: '#fff' }
+        ).setOrigin(0.5, 0.5);
+
+        if (this.input?.keyboard) {
+          const keyY = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+          const keyN = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.N);
+      
+          keyY.once('down', () => {
+              this.loadGameState();
+              promptText.destroy();
+          });
+      
+          keyN.once('down', () => {
+              localStorage.removeItem('gameState'); // Clear old data
+              promptText.destroy();
+          });
+        }
+      }
     }
 
     update () {
@@ -298,6 +322,7 @@ class MyGame extends Phaser.Scene {
               }
               field.plantLevel = 0;
           }
+          this.saveGameState();
       });
 
       // Sow button functionality
@@ -315,6 +340,7 @@ class MyGame extends Phaser.Scene {
         if (!clickedField && this.sowButton) {
           this.sowButton.destroy();
         }
+        this.saveGameState();
       });
   }
 
@@ -400,6 +426,54 @@ class MyGame extends Phaser.Scene {
     if (col < gridCols - 1) neighbors.push(this.fields[fieldIndex + 1]);
 
     return neighbors;
+  }
+  private saveGameState(): void
+  {
+    const gameState = {
+      fields: this.fields.map(field => ({
+        index: field.index,
+        waterLevel: field.waterLevel,
+        sunLevel: field.sunLevel,
+        plantLevel: field.plantLevel,
+        texture: field.sprite.texture.key,
+      })),
+      farmer: {
+        x: this.farmer?.x || 0,
+        y: this.farmer?.y || 0,
+      },
+      dayCounter: this.dayCounter,
+      stage3Counter: this.stage3Counter,
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+    console.log('game saved ^-^');
+  }
+  private loadGameState(): void
+  {
+    const savedState = localStorage.getItem('gameState');
+    if (savedState)
+    {
+      const gameState = JSON.parse(savedState);
+      this.fields.forEach((field, index) => {
+        const savedField = gameState.fields[index];
+        if (savedField)
+        {
+          field.waterLevel = savedField.waterLevel;
+          field.sunLevel = savedField.sunLevel;
+          field.plantLevel = savedField.plantLevel;
+          field.sprite.setTexture(savedField.texture);
+        }
+      });
+      if (this.farmer)
+      {
+        this.farmer.x = gameState.farmer.x;
+        this.farmer.y = gameState.farmer.y;
+      }
+      this.dayCounter = gameState.dayCounter;
+      this.stage3Counter = gameState.stage3Counter;
+      this.dayText?.setText(`Days: ${this.dayCounter}`);
+      this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+      console.log('Game loaded :3');
+    }
   }
 }
 
