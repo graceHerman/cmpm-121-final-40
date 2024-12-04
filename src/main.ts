@@ -24,6 +24,8 @@ class MyGame extends Phaser.Scene {
     private sunText: Phaser.GameObjects.Text | undefined;
     private reapButton: Phaser.GameObjects.Text | undefined;
     private sowButton: Phaser.GameObjects.Text | undefined;
+    private undoButton: Phaser.GameObjects.Text | undefined; 
+    private redoButton: Phaser.GameObjects.Text | undefined;
 
     private undoStack: Field[][] = []; // Stack for undo
     private redoStack: Field[][] = []; // Stack for redo
@@ -336,28 +338,28 @@ setInterval(() => {
 }, 60000); // 60,000 milliseconds = 1 minute
 
 // Create Undo Button
-const undoButton = this.add.text(180, this.cameras.main.height - 500, '<-', {
+this.undoButton = this.add.text(10, 10, 'Undo', {
   fontSize: '20px',
-  backgroundColor: '#e74c3c',
-  padding: { x: 20, y: 10 },
-  align: 'center'
+  backgroundColor: '#f39c12',
+  padding: { x: 5, y: 2 },
 }).setInteractive();
 
-undoButton.on('pointerdown', () => {
+this.undoButton.on('pointerdown', () => {
   this.undo();
+  this.saveGameState(); // Save the state after undoing
 });
 
-// Create Redo Button
-const redoButton = this.add.text(250, this.cameras.main.height - 500, '->', {
+this.redoButton = this.add.text(70, 10, 'Redo', {
   fontSize: '20px',
-  backgroundColor: '#2980b9',
-  padding: { x: 20, y: 10 },
-  align: 'center'
+  backgroundColor: '#2ecc71',
+  padding: { x: 5, y: 2 },
 }).setInteractive();
 
-redoButton.on('pointerdown', () => {
+this.redoButton.on('pointerdown', () => {
   this.redo();
+  this.saveGameState(); // Save the state after redoing
 });
+
 
 // Add event listener when player clicks on field
 this.fields.forEach(field => {
@@ -366,7 +368,7 @@ this.fields.forEach(field => {
       //this.saveGameState(); // Save state every time a change happens
   });
 });
-
+this.undoStack.push(this.getCurrentState());
     }
 
     update () {
@@ -468,6 +470,9 @@ this.fields.forEach(field => {
       // Reap button functionality
       this.reapButton.on('pointerdown', () => {
           console.log(`Reaped field ${field.index}`);
+          this.undoStack.push(this.getCurrentState()); 
+          this.redoStack = []; 
+          field.sprite.setTexture('field'); 
           // Additional logic for reaping (e.g., resetting levels, clearing plants)
           if (field.sprite.texture.key !== 'field') {
               field.sprite.setTexture('field');
@@ -483,6 +488,8 @@ this.fields.forEach(field => {
 
       // Sow button functionality
       this.sowButton.on('pointerdown', () => {
+          this.undoStack.push(this.getCurrentState()); // Save the current state before sowing
+          this.redoStack = [];
           this.showSowMenu(field);
           this.saveGameState();
       });
@@ -565,8 +572,6 @@ this.fields.forEach(field => {
     }
     return currentTexture; // If no next stage, return the current texture
   }
-
-  // Get neighbor fields 
   private getNeighbors(field: Field): Field[] {
     const neighbors: Field[] = [];
     const fieldIndex = field.index;
@@ -586,41 +591,30 @@ this.fields.forEach(field => {
   }
 
   private saveGameState(): void
-  {
-    const gameState = {
-      fields: this.fields.map(field => ({
-        index: field.index,
-        waterLevel: field.waterLevel,
-        sunLevel: field.sunLevel,
-        plantLevel: field.plantLevel,
-        texture: field.sprite.texture.key,
-      })),
-      farmer: {
-        x: this.farmer?.x || 0,
-        y: this.farmer?.y || 0,
-      },
-      dayCounter: this.dayCounter,
-      stage3Counter: this.stage3Counter,
-    };
+{
+  const gameState = {
+    fields: this.fields.map(field => ({
+      index: field.index,
+      waterLevel: field.waterLevel,
+      sunLevel: field.sunLevel,
+      plantLevel: field.plantLevel,
+      texture: field.sprite.texture.key,  // Save the texture key
+    })),
+    farmer: {
+      x: this.farmer?.x || 0,
+      y: this.farmer?.y || 0,
+    },
+    dayCounter: this.dayCounter,
+    stage3Counter: this.stage3Counter,
+  };
 
-    /*// Save the current game state to the undo stack
-  const currentState = this.fields.map(field => ({
-    index: field.index,
-    waterLevel: field.waterLevel,
-    sunLevel: field.sunLevel,
-    plantLevel: field.plantLevel
-  }));
-
-  this.undoStack.push(currentState);
-
-  // Save the game state to local storage
-  localStorage.setItem('gameState', JSON.stringify(currentState));
-  
-  // Clear redo stack whenever a new state is saved
-  this.redoStack = [];*/
-    localStorage.setItem('gameState', JSON.stringify(gameState));
-    console.log('game saved ^-^');
+  this.undoStack.push(this.cloneState(this.fields));
+  if (this.undoStack.length > 20) {
+    this.undoStack.shift(); // Limit the stack size to prevent memory issues
   }
+  this.redoStack = [];
+  localStorage.setItem('gameState', JSON.stringify(gameState));
+}
 
   private loadGameState(): void
   {
@@ -701,21 +695,61 @@ this.fields.forEach(field => {
     }
   }
 
-  private undo(): void {
-    if (this.undoStack.length > 0) {
-      const previousState = this.undoStack.pop();
-      this.redoStack.push(this.getCurrentState());  // Push current state to redo stack
-      this.loadState(previousState);
+  private undo() {
+    if (this.undoStack.length > 1) {
+        const currentState = this.undoStack.pop(); // Remove the current state
+        if (currentState) {
+            this.redoStack.push(this.cloneState(currentState)); // Push the current state to the redo stack
+        }
+        const previousState = this.undoStack[this.undoStack.length - 1]; // Get the previous state
+
+        this.restoreState(previousState); // Restore the state
+    } else {
+        console.log("No more actions to undo.");
     }
-  }
+}
   
-  private redo(): void {
-    if (this.redoStack.length > 0) {
-      const nextState = this.redoStack.pop();
-      this.undoStack.push(this.getCurrentState());  // Push current state to undo stack
-      this.loadState(nextState);
-    }
+private redo() {
+  if (this.redoStack.length > 0) {
+      const redoState = this.redoStack.pop(); // Get the next state to redo
+      if (redoState) {
+          this.undoStack.push(this.cloneState(redoState)); // Push the current state to the undo stack
+          this.restoreState(redoState); // Restore the state
+      }
+  } else {
+      console.log("No more actions to redo.");
   }
+}
+private cloneState(state: Field[]): Field[] {
+  return state.map(field => ({
+      index: field.index,
+      sprite: field.sprite,
+      waterLevel: field.waterLevel,
+      sunLevel: field.sunLevel,
+      plantLevel: field.plantLevel,
+      texture: field.sprite.texture.key,
+  }));
+}
+private restoreState(state: Field[]) {
+  this.fields.forEach((field, index) => {
+      const savedField = state[index];
+      field.waterLevel = savedField.waterLevel;
+      field.sunLevel = savedField.sunLevel;
+      field.plantLevel = savedField.plantLevel;
+      
+      // Use setTexture with the texture key string directly
+      if (field.plantLevel === 1) {
+          field.sprite.setTexture('Sunflower');
+      } else if (field.plantLevel === 2) {
+          field.sprite.setTexture('Sunflower2');
+      } else if (field.plantLevel === 3) {
+          field.sprite.setTexture('Sunflower3');
+      } else {
+          field.sprite.setTexture('field');  // Default texture for empty field
+      }
+  });
+}
+
   
   private getCurrentState(): any {
     return this.fields.map(field => ({
@@ -733,12 +767,8 @@ this.fields.forEach(field => {
       field.sunLevel = fieldState.sunLevel;
       field.plantLevel = fieldState.plantLevel;
     });
-    // Optionally update the UI or display the new state.
   }
-  
-
 }
-
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
