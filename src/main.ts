@@ -219,10 +219,10 @@ class MyGame extends Phaser.Scene {
       }
 
       // Save Button
-const saveButton = this.add.text(353, 100, 'Save Game', {
+const saveButton = this.add.text(375, 95, 'Save Game', {
   fontSize: '20px',
   backgroundColor: '#f39c12',
-  padding: { x: 20, y: 10 },
+  padding: { x: 6, y: 6 },
   align: 'center'
 }).setInteractive();
 
@@ -265,10 +265,10 @@ saveButton.on('pointerdown', () => {
 });
 
 // Load Button
-const loadButton = this.add.text(353, 55, 'Load Game', {
+const loadButton = this.add.text(375, 55, 'Load Game', {
   fontSize: '20px',
   backgroundColor: '#2980b9',
-  padding: { x: 20, y: 10 },
+  padding: { x: 6, y: 6 },
   align: 'center'
 }).setInteractive();
 
@@ -338,7 +338,7 @@ setInterval(() => {
 }, 60000); // 60,000 milliseconds = 1 minute
 
 // Create Undo Button
-this.undoButton = this.add.text(10, 10, 'Undo', {
+this.undoButton = this.add.text(193, 10, 'Undo', {
   fontSize: '20px',
   backgroundColor: '#f39c12',
   padding: { x: 5, y: 2 },
@@ -349,7 +349,7 @@ this.undoButton.on('pointerdown', () => {
   this.saveGameState(); // Save the state after undoing
 });
 
-this.redoButton = this.add.text(70, 10, 'Redo', {
+this.redoButton = this.add.text(250, 10, 'Redo', {
   fontSize: '20px',
   backgroundColor: '#2ecc71',
   padding: { x: 5, y: 2 },
@@ -760,14 +760,14 @@ private restoreState(state: Field[]) {
     }));
   }
   
-  private loadState(state: any): void {
+  /*private loadState(state: any): void {
     state.forEach((fieldState: any, index: number) => {
       const field = this.fields[index];
       field.waterLevel = fieldState.waterLevel;
       field.sunLevel = fieldState.sunLevel;
       field.plantLevel = fieldState.plantLevel;
     });
-  }
+  }*/
 }
 
 const config: Phaser.Types.Core.GameConfig = {
