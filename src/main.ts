@@ -683,7 +683,7 @@ private undo() {
 
  if (this.undoStack.length > 1) {
      const originalLength = this.undoStack.length; // Track the length before shift
-     const removedState = this.undoStack.shift(); // Removes and returns the first state
+     const removedState = this.undoStack.pop(); // Removes and returns the first state
 
 
      // Check and log the removed state
