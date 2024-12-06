@@ -318,16 +318,16 @@ class Play extends Phaser.Scene {
 
     getNextTexture(currentTexture, stage) {
         const plantMap = {
-            'Sunflower': ['Sunflower', 'Sunflower2', 'Sunflower3', 'Sunflower3'],
-            'Mushroom': ['Mushroom', 'Mushroom2', 'Mushroom3', 'Mushroom3'],
-            'Herb': ['Herb', 'Herb2', 'Herb3', 'Herb3'],
+            'Sunflower': ['Sunflower', 'Sunflower2', 'Sunflower3'],
+            'Mushroom': ['Mushroom', 'Mushroom2', 'Mushroom3'],
+            'Herb': ['Herb', 'Herb2', 'Herb3'],
         };
     
         const plantTextures = plantMap[currentTexture];
     
         if (!plantTextures) {
             console.error(`Texture key "${currentTexture}" not found in plantMap.`);
-            return currentTexture;  // Return the original texture if not found
+            return currentTexture; // Return the original texture if not found
         }
     
         if (stage < plantTextures.length) {
