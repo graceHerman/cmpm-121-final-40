@@ -300,19 +300,23 @@ class Play extends Phaser.Scene {
         switch (level) {
             case 1:
                 textureKey = this.getNextTexture(field.sprite.texture.key, 1);
+                console.log("1");
                 break;
             case 2:
                 textureKey = this.getNextTexture(field.sprite.texture.key, 2);
+                console.log("2");
                 break;
             case 3:
                 textureKey = this.getNextTexture(field.sprite.texture.key, 3);
+                console.log("3");
                 break;
         }
 
         if (textureKey) {
             field.sprite.setTexture(textureKey);
             field.plantLevel = level;
-            console.log("Next stage: " + level);
+            console.log("Next stage: " + field.plantLevel);
+            console.log("textureKey: " + textureKey);
         }
     }
 
