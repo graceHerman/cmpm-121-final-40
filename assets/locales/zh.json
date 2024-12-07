@@ -1,0 +1,11 @@
+{
+    "button_start": "开始游戏",
+    "button_exit": "退出",
+    "welcome_message": "欢迎来到游戏!",
+
+    "next_day": "下一天",
+    "days": "天数：",
+    "reap": "收获",
+    "sow": "播种",
+    "you_win": "你赢了!"
+  }

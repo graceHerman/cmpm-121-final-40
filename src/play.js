@@ -22,9 +22,42 @@ class Play extends Phaser.Scene {
         this.load.image('Mushroom2', './assets/Mush2.png');
         this.load.image('Mushroom3', './assets/Mush3.png');
         this.load.image('farmer', './assets/farmer.png');
+
+        this.load.json('en', 'assets/locales/en.json');
+        this.load.json('es', 'assets/locales/es.json');
+        this.load.json('zh', 'assets/locales/zh.json');
+        this.load.json('ar', 'assets/locales/ar.json');
     }
 
     create() {
+        // Fetch the current language's translations
+    const lang = Localization.get.bind(Localization);
+
+    this.dayCounter = 0; // Initialize day counter
+
+    // Next Day Button
+    this.nextDayButton = this.add.text(350, 20, lang('next_day'), {
+        fontSize: '20px',
+        backgroundColor: '#21a99c',
+        padding: { x: 20, y: 10 },
+        align: 'center'
+    }).setInteractive();
+
+    this.nextDayButton.on('pointerdown', () => {
+        this.dayCounter++;
+        this.dayText.setText(`${lang('days')}: ${this.dayCounter}`);
+        this.assignRandomLevels();
+        this.saveGameState();
+    });
+
+    // Day Text
+    this.dayText = this.add.text(
+        50,
+        this.cameras.main.height - 6,
+        `${lang('days')}: ${this.dayCounter}`,
+        { font: '20px Arial' }
+    );
+
         this.keyA = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.keyS = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.keyD = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D);
@@ -563,6 +596,7 @@ class Play extends Phaser.Scene {
             console.log("Redo action performed");
         });
     }
+
     loadGameState(slot = 1) {
         const savedState = localStorage.getItem(`gameStateSlot${slot}`);
         if (savedState) {
