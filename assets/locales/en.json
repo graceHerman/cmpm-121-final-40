@@ -21,5 +21,6 @@
     "stage3": "Plants at stage 3: ",
     "water": "Water: ",
     "sun": "Sun: ",
+    "no-save": "No save found in slot",
     "you_win": "You Win!"
   }

@@ -98,7 +98,7 @@ class Play extends Phaser.Scene {
         this.counterText = this.add.text(
             this.cameras.main.width / 2,
             this.cameras.main.height - 6,
-            `Plants at stage 3: ${this.stage3Counter}`,
+            `${Localization.get('stage3')}: ${this.stage3Counter}`,
             { font: '20px Arial' }
         );
         this.counterText.setOrigin(0.5, 1);
@@ -204,7 +204,7 @@ class Play extends Phaser.Scene {
     incrementCounter() {
         this.stage3Counter++;
         if (this.counterText) {
-            this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
+            this.counterText.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
         }
     }
 
@@ -245,7 +245,7 @@ class Play extends Phaser.Scene {
             // Reset plant state
             if (field.plantLevel === 3) {
                 this.stage3Counter--;
-                this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
+                this.counterText.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
             }
             field.plantLevel = 0;
             this.saveGameState();
@@ -303,7 +303,7 @@ class Play extends Phaser.Scene {
             this.stage3Counter--;
             
             this.redoStack = [];
-            this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+            this.counterText?.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
         } else {
             console.log(`No plant to reap in field ${field.index}`);
         }
@@ -429,7 +429,7 @@ class Play extends Phaser.Scene {
             field.waterLevel = savedField.waterLevel;
             field.sunLevel = savedField.sunLevel;
             field.sprite.setTexture(savedField.plantTexture); 
-            this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+            this.counterText?.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
     this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
     console.log("State restored, updating UI."); // Restore the texture
         });
@@ -443,7 +443,7 @@ class Play extends Phaser.Scene {
         this.dayCounter = state.dayCounter || 0;
         this.dayText.setText(`${Localization.get('days')}: ${this.dayCounter}`);
         this.stage3Counter = state.stage3Counter || 0;
-        this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
+        this.counterText.setText(`${Localization.get('stage3')} ${this.stage3Counter}`);
     }
     undo() {
         if (this.undoStack.length > 1) {
@@ -534,10 +534,12 @@ class Play extends Phaser.Scene {
                 const promptText = this.add.text(
                     this.cameras.main.width / 2,
                     this.cameras.main.height / 2,
-                    `Saved to slot ${slot}`,
+                    `${Localization.get('save')}: ${slot}`,
                     { font: '20px Arial', color: '#ffffff' }
                 ).setOrigin(0.5, 0.5);
-
+                if (promptText) {
+                    promptText.setText(`${Localization.get('save')}: ${slot}`);
+                }
                 if (saveButton) {
                     saveButton.setText(`${Localization.get('save')}: ${slot}`);
                 }
@@ -601,7 +603,7 @@ class Play extends Phaser.Scene {
                 { font: '20px Arial', color: '#ffffff' }
             ).setOrigin(0.5, 0.5);
             if (promptText) {
-                promptText.setText(`${Localization.get('load')}`);
+                promptText.setText(`${Localization.get('load')} ${slot}`);
             }
 
 
@@ -611,9 +613,12 @@ class Play extends Phaser.Scene {
             const promptText = this.add.text(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2,
-                `No save found in slot ${slot}`,
+                `${Localization.get('no-save')} ${slot}`,
                 { font: '20px Arial', color: '#ff0000' }
             ).setOrigin(0.5, 0.5);
+            if (promptText) {
+                promptText.setText(`${Localization.get('load')} ${slot}`);
+            }
 
             this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
         }
@@ -666,6 +671,9 @@ updateLocalizedText() {
     }
     if (this.waterText) {
         this.waterText.setText(Localization.get('water'));
+    }
+    if (this.counterText) {
+        this.counterText.setText(`${Localization.get('stage3')} ${this.stage3Counter}`);
     }    
 }
 }
