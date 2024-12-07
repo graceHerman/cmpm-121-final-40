@@ -508,7 +508,7 @@ class Play extends Phaser.Scene {
     
     setupSaveLoadButtons() {
         for (let slot = 1; slot <= 3; slot++) {
-            const saveButton = this.add.text(320, 70 + (slot - 1) * 50, `Save Slot ${slot}`, {
+            const saveButton = this.add.text(320, 70 + (slot - 1) * 50, `${Localization.get('save')}: ${slot}`, {
                 fontSize: '20px',
                 backgroundColor: '#21a99c',
                 padding: { x: 20, y: 10 },
@@ -525,6 +525,10 @@ class Play extends Phaser.Scene {
                     `Saved to slot ${slot}`,
                     { font: '20px Arial', color: '#ffffff' }
                 ).setOrigin(0.5, 0.5);
+
+                if (saveButton) {
+                    saveButton.setText(`${Localization.get('save')}: ${slot}`);
+                }
     
                 this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
             });
@@ -532,14 +536,14 @@ class Play extends Phaser.Scene {
     
         // Load buttons for slots
         for (let slot = 1; slot <= 3; slot++) {
-            const loadButton = this.add.text(500, 70 + (slot - 1) * 50, `Load Slot ${slot}`, {
+            this.loadButton = this.add.text(500, 70 + (slot - 1) * 50, `Load Slot ${slot}`, {
                 fontSize: '20px',
                 backgroundColor: '#21a99c',
                 padding: { x: 20, y: 10 },
                 align: 'center'
             }).setInteractive();
     
-            loadButton.on('pointerdown', () => {
+            this.loadButton.on('pointerdown', () => {
                 this.loadGameState(slot);
             });
         }
@@ -640,6 +644,8 @@ updateLocalizedText() {
     }
     if (this.redoButton) {
         this.redoButton.setText(Localization.get('redo'));
-    }
+    }    
 }
 }
+
+// Localization.get('undo')
