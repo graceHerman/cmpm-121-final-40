@@ -30,33 +30,6 @@ class Play extends Phaser.Scene {
     }
 
     create() {
-        // Fetch the current language's translations
-    const lang = Localization.get.bind(Localization);
-
-    this.dayCounter = 0; // Initialize day counter
-
-    // Next Day Button
-    this.nextDayButton = this.add.text(350, 20, lang('next_day'), {
-        fontSize: '20px',
-        backgroundColor: '#21a99c',
-        padding: { x: 20, y: 10 },
-        align: 'center'
-    }).setInteractive();
-
-    this.nextDayButton.on('pointerdown', () => {
-        this.dayCounter++;
-        this.dayText.setText(`${lang('days')}: ${this.dayCounter}`);
-        this.assignRandomLevels();
-        this.saveGameState();
-    });
-
-    // Day Text
-    this.dayText = this.add.text(
-        50,
-        this.cameras.main.height - 6,
-        `${lang('days')}: ${this.dayCounter}`,
-        { font: '20px Arial' }
-    );
 
         this.keyA = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.keyS = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S);

@@ -5,18 +5,20 @@ class Localization {
     // Load language file
     static async loadLanguage(languageCode) {
         try {
-            const response = await fetch(`assets/locales/${languageCode}.json`); // Correct the path here
+            console.log("language: " + `assets/locales/${languageCode}.json`);
+            const response = await fetch(`assets/locales/${languageCode}.json`);
             if (!response.ok) {
                 throw new Error(`Could not load ${languageCode}.json`);
             }
             this.languageData = await response.json();
+            console.log(JSON.stringify(this.languageData, null, 2));  // Log the loaded data
             this.currentLanguageCode = languageCode;  // Update current language
+            //console.log("languageCode: " + this.currentLanguageCode);
             this.updateUI();
         } catch (error) {
             console.error("Error loading language:", error);
         }
     }
-    
 
     // Get the translated text for a key
     static get(key) {
@@ -28,11 +30,16 @@ class Localization {
         const elements = document.querySelectorAll('[data-localize]');
         elements.forEach((element) => {
             const key = element.getAttribute('data-localize');
+            console.log("key: " + key);
             element.textContent = this.get(key);  // Set the element's text to the translated value
+            console.log("element.textContent: " + element.textContent);
         });
 
         // Handle right-to-left languages (e.g., Arabic)
+        // In updateUI() function
+        console.log("languageCode: " + this.currentLanguageCode);
         const isRtlLanguage = ['ar'].includes(this.currentLanguageCode);
+        console.log("isRtlLanguage: " + isRtlLanguage);
         document.body.style.direction = isRtlLanguage ? 'rtl' : 'ltr';
     }
 }
@@ -44,10 +51,5 @@ window.onload = () => {
 
 // Change language based on the selection
 function changeLanguage(languageCode) {
-    Localization.loadLanguage(languageCode).then(() => {
-        // Assuming that the language data is loaded successfully, update the UI
-        this.nextDayButton.setText(Localization.get('next_day')); // Use Localization.get() to get the translated text
-        this.dayText.setText(Localization.get('days') + this.dayCounter);
-    });
+    Localization.loadLanguage(languageCode);
 }
-

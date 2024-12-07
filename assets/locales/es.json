@@ -1,7 +1,7 @@
 {
-    "greeting": "¡Bienvenido al juego!",
-    "start_button": "Comenzar",
-    "pause_button": "Pausa",
+  "button_start": "Comenzar",
+  "button_exit": "Pausa",
+  "greeting": "¡Bienvenido al juego!",
 
     "next_day": "Siguiente Día",
     "days": "Días: ",

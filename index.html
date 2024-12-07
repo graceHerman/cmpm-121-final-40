@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>121 Final Project</title>
+
+    <!-- Google Fonts for Arabic and Chinese -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic&family=Noto+Sans+TC&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans', 'Noto Sans TC', 'Noto Sans Arabic', sans-serif;
+        }
+
+        /* Right-to-left handling for Arabic */
+        body[dir="rtl"] {
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
   </head>
   <body>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
@@ -13,9 +28,9 @@
     <script src="./src/LanguageManager.js"></script>
     
 
-    <button data-localize="start_button"></button>
-    <button data-localize="pause_button"></button>
-    <h1 data-localize="greeting"></h1>
+    <button data-localize="button_start"></button>
+    <button data-localize="button_exit"></button>
+    <h1 data-localize="welcome_message"></h1>
 
     <select onchange="changeLanguage(this.value)">
       <option value="en">English</option>
@@ -23,6 +38,7 @@
       <option value="zh">Chinese</option>
       <option value="ar">Arabic</option>
     </select>
+
   </body>
 </html>
 
