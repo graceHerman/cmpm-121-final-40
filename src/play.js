@@ -223,13 +223,13 @@ class Play extends Phaser.Scene {
         
         // Display Reap and Sow buttons
         const buttonY = field.sprite.y - 20;
-        this.reapButton = this.add.text(field.sprite.x - 20, buttonY, 'Reap', {
+        this.reapButton = this.add.text(field.sprite.x - 20, buttonY, Localization.get('reap'), {
             fontSize: '14px',
             backgroundColor: '#ff6666',
             padding: { x: 7, y: 3 },
         }).setInteractive();
     
-        this.sowButton = this.add.text(field.sprite.x + 30, buttonY, 'Sow', {
+        this.sowButton = this.add.text(field.sprite.x + 30, buttonY, Localization.get('sow'), {
             fontSize: '14px',
             backgroundColor: '#66cc66',
             padding: { x: 7, y: 3 },
@@ -628,6 +628,12 @@ updateLocalizedText() {
     }
     if (this.nextDayButton) {
         this.nextDayButton.setText(Localization.get('next_day'));
+    }
+    if (this.reapButton) {
+        this.reapButton.setText(Localization.get('reap'));
+    }
+    if (this.sowButton) {
+        this.sowButton.setText(Localization.get('sow'));
     }
 }
 }
