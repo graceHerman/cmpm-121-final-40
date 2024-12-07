@@ -547,27 +547,27 @@ class Play extends Phaser.Scene {
 
     setupUndoRedoButtons() {
         // Create Undo button
-        const undoButton = this.add.text(30, 20, 'Undo', {
+        this.undoButton = this.add.text(30, 20, Localization.get('undo'), {
             fontSize: '20px',
             backgroundColor: 'green',
             padding: { x: 20, y: 10 },
             align: 'center'
         }).setInteractive();
     
-        undoButton.on('pointerdown', () => {
+        this.undoButton.on('pointerdown', () => {
             this.undo();
             console.log("Undo action performed");
         });
     
         // Create Redo button
-        const redoButton = this.add.text(130, 20, 'Redo', {
+        this.redoButton = this.add.text(150, 20, Localization.get('redo'), {
             fontSize: '20px',
             backgroundColor: '#f0a500',
             padding: { x: 20, y: 10 },
             align: 'center'
         }).setInteractive();
     
-        redoButton.on('pointerdown', () => {
+        this.redoButton.on('pointerdown', () => {
             this.redo();
             console.log("Redo action performed");
         });
@@ -634,6 +634,12 @@ updateLocalizedText() {
     }
     if (this.sowButton) {
         this.sowButton.setText(Localization.get('sow'));
+    }
+    if (this.undoButton) {
+        this.undoButton.setText(Localization.get('undo'));
+    }
+    if (this.redoButton) {
+        this.redoButton.setText(Localization.get('redo'));
     }
 }
 }
