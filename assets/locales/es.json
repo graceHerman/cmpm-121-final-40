@@ -7,6 +7,20 @@
     "days": "Días: ",
     "reap": "Cosechar",
     "sow": "Sembrar",
+    "sunflower": "Girasol",
+    "mushroom": "Hongo",
+    "herb": "Hierba",
+    "save": "Guardar ranura ",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "saved": "Guardado en la ranura",
+    "auto-save": "¿Quieres cargar el juego? S/N.",
+    "load": "Ranura de guardado cargada ",
+    "loaded": "¡Juego cargado!",
+    "new": "Iniciando un juego nuevo...",
+    "stage3": "Plantas en etapa 3: ",
+    "water": "Agua: ",
+    "sun": "Sol: ",
     "you_win": "¡Ganaste!"
   }
   
