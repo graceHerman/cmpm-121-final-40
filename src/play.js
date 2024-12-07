@@ -204,7 +204,7 @@ class Play extends Phaser.Scene {
             field.waterLevel += Phaser.Math.Between(0, 10);
             field.sunLevel = Phaser.Math.Between(0, 100);
         });
-        console.log("Random levels assigned to fields:", this.fields);
+        //console.log("Random levels assigned to fields:", this.fields);
     }
 
     handleFieldSelection(field) {
@@ -314,6 +314,7 @@ class Play extends Phaser.Scene {
 
     updatePlantTexture(field, level) {
         let textureKey = '';
+        console.log("key: " + field.sprite.texture.key);
 
         switch (level) {
             case 1:
@@ -333,6 +334,7 @@ class Play extends Phaser.Scene {
         if (textureKey) {
             field.sprite.setTexture(textureKey);
             field.plantLevel = level;
+            console.log("sprite: " + field.sprite);
             console.log("Next stage: " + field.plantLevel);
             console.log("textureKey: " + textureKey);
         }
@@ -340,23 +342,32 @@ class Play extends Phaser.Scene {
 
     getNextTexture(currentTexture, stage) {
         const plantMap = {
-            'Sunflower': ['Sunflower', 'Sunflower2', 'Sunflower3'],
-            'Mushroom': ['Mushroom', 'Mushroom2', 'Mushroom3'],
-            'Herb': ['Herb', 'Herb2', 'Herb3'],
+            Sunflower: ['Sunflower', 'Sunflower2', 'Sunflower3'],
+            Mushroom: ['Mushroom', 'Mushroom2', 'Mushroom3'],
+            Herb: ['Herb', 'Herb2', 'Herb3'],
         };
     
-        const plantTextures = plantMap[currentTexture];
+        // Extract base name by removing any numbers at the end (e.g., "Sunflower2" -> "Sunflower")
+        const baseTexture = currentTexture.replace(/\d+$/, '');
+        console.log("Base texture: " + baseTexture);
+    
+        const plantTextures = plantMap[baseTexture];
+        console.log("plantTextures before: " + plantTextures);
     
         if (!plantTextures) {
-            console.error(`Texture key "${currentTexture}" not found in plantMap.`);
+            console.error(`Texture key "${baseTexture}" not found in plantMap.`);
             return currentTexture; // Return the original texture if not found
         }
     
-        if (stage < plantTextures.length) {
+        // Check if the stage index is valid
+        if (stage > 0 && stage <= plantTextures.length) {
+            console.log("plantTextures after: " + plantTextures[stage - 1]);
             return plantTextures[stage - 1];
         }
-        return currentTexture;
-    }
+    
+        console.error(`Invalid stage "${stage}" for base texture "${baseTexture}".`);
+        return currentTexture; // Return the original texture if stage is invalid
+    }    
     
 
     getNeighbors(field) {
