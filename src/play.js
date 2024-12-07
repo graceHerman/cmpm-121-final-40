@@ -5,7 +5,8 @@ class Play extends Phaser.Scene {
         this.stage3Counter = 0;
         this.dayCounter = 0;
         this.undoStack = []; // Initialize undo stack
-        this.redoStack = []; // Initialize redo stack
+        this.redoStack = []; 
+        
     }
 
     preload() {
@@ -28,6 +29,17 @@ class Play extends Phaser.Scene {
         this.keyS = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.keyD = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keyW = this.input?.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.input.keyboard.on('keydown-ONE', () => {
+            this.loadGameState(1); // Load slot 1
+        });
+        
+        this.input.keyboard.on('keydown-TWO', () => {
+            this.loadGameState(2); // Load slot 2
+        });
+        
+        this.input.keyboard.on('keydown-THREE', () => {
+            this.loadGameState(3); // Load slot 3
+        });
 
         let background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
         background.setScale(0.86, 0.86);
@@ -217,8 +229,8 @@ class Play extends Phaser.Scene {
         // Reap button functionality
         this.reapButton.on('pointerdown', () => {
             console.log(`Reaped field ${field.index}`);
-            this.undoStack.push(this.getCurrentState());
-            this.redoStack = [];
+            this.undoStack.push(this.getCurrentState()); // Save the current state before reaping
+            this.redoStack = [];  // Clear redo stack after a new action
             field.sprite.setTexture('field');
             
             // Reset plant state
@@ -276,9 +288,12 @@ class Play extends Phaser.Scene {
     
     reap(field) {
         if (field.plantLevel === 3) {
+            this.undoStack.push(this.getCurrentState());
             field.plantLevel = 0;
             this.updatePlantTexture(field, 0);
             this.stage3Counter--;
+            
+            this.redoStack = [];
             this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
         } else {
             console.log(`No plant to reap in field ${field.index}`);
@@ -288,7 +303,10 @@ class Play extends Phaser.Scene {
     sow(field) {
         if (field.plantLevel === 0) {
             // Create plant selection menu
+            this.undoStack.push(this.getCurrentState());
             this.createPlantSelectionMenu(field);
+            
+            this.redoStack = [];
         } else {
             console.log(`Field ${field.index} already has a plant`);
         }
@@ -364,7 +382,6 @@ class Play extends Phaser.Scene {
         this.redoStack = [];  // Clear redo stack after a new action
     }
     
-
     getCurrentState() {
         return {
             fields: this.fields.map(field => ({
@@ -372,16 +389,14 @@ class Play extends Phaser.Scene {
                 plantLevel: field.plantLevel,
                 waterLevel: field.waterLevel,
                 sunLevel: field.sunLevel,
-                plantTexture: field.sprite.texture.key // Save the texture key as well
+                plantTexture: field.sprite.texture.key  // Save the texture key as well
             })),
             farmerPosition: { x: this.farmer.x, y: this.farmer.y },
-            dayCounter: this.dayCounter
+            dayCounter: this.dayCounter,
+            stage3Counter: this.stage3Counter
         };
     }
     
-    
-    
-
     restoreState(state) {
         // Restore fields
         state.fields.forEach(savedField => {
@@ -389,14 +404,10 @@ class Play extends Phaser.Scene {
             field.plantLevel = savedField.plantLevel;
             field.waterLevel = savedField.waterLevel;
             field.sunLevel = savedField.sunLevel;
-    
-            // Restore the correct texture based on the saved texture key
-            if (savedField.plantLevel > 0) {
-                field.sprite.setTexture(savedField.plantTexture);  // Restore the texture
-            }
-    
-            // Update the plant texture based on the level (this can help ensure correct appearance)
-            this.updatePlantTexture(field, field.plantLevel);
+            field.sprite.setTexture(savedField.plantTexture); 
+            this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
+    this.dayText?.setText(`Days: ${this.dayCounter}`);
+    console.log("State restored, updating UI."); // Restore the texture
         });
     
         // Restore farmer position
@@ -404,94 +415,112 @@ class Play extends Phaser.Scene {
             this.farmer.setPosition(state.farmerPosition.x, state.farmerPosition.y);
         }
     
-        // Restore day counter
-        if (state.dayCounter !== undefined) {
-            this.dayCounter = state.dayCounter;
-            this.dayText.setText(`Days: ${this.dayCounter}`);
-        }
-    
-        // Update the stage 3 counter
-        if (state.fields) {
-            this.stage3Counter = state.fields.filter(f => f.plantLevel === 3).length;
-            this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
-        }
+        // Restore counters
+        this.dayCounter = state.dayCounter || 0;
+        this.dayText.setText(`Days: ${this.dayCounter}`);
+        this.stage3Counter = state.stage3Counter || 0;
+        this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
     }
     undo() {
-        if (this.undoStack.length > 1) {  // Ensure there is a previous state to undo to
-            const previousState = this.undoStack.pop();  // Get the previous state
-            this.redoStack.push(this.getCurrentState());  // Save the current state to the redo stack
-            this.restoreState(previousState);  // Restore the previous state
-        }
-    }
-
-    redo() {
-        if (this.redoStack.length > 0) {  // Ensure there is a redo state available
-            const nextState = this.redoStack.pop();  // Get the next state
-            this.undoStack.push(this.getCurrentState());  // Save the current state to the undo stack
-            this.restoreState(nextState);  // Restore the next state
+        if (this.undoStack.length > 1) {
+            const currentState = this.undoStack.pop(); // Remove the latest state
+            this.redoStack.push(currentState); // Save the current state for redo
+            const previousState = this.undoStack[this.undoStack.length - 1]; // Peek at the new top of the stack
+            this.restoreState(previousState); // Restore the previous state
+            console.log('Undo performed.');
+        } else {
+            console.log("Nothing to undo.");
         }
     }
     
+    redo() {
+        if (this.redoStack.length > 0) {
+            const nextState = this.redoStack.pop(); // Get the most recent undone state
+            this.undoStack.push(this.getCurrentState()); // Save the current state to the undo stack
+            this.restoreState(nextState); // Restore the state
+            console.log('Redo performed.');
+        } else {
+            console.log("Nothing to redo.");
+        }
+    }
+    
+    
     handleGameStatePrompt() {
-        // Check if a saved game state exists in localStorage
         const savedState = localStorage.getItem('gameState');
         if (savedState) {
-            // If a saved state exists, prompt the user to continue or start a new game
             const promptText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 
                 'Do you want to load the saved game? Y/N.', 
                 { font: '20px Arial', color: '#ff0000', wordWrap: { width: 500 } }
             ).setOrigin(0.5, 0.5);
-        
-            // Wait for the user to press "Y" or "N"
+    
             this.input.keyboard.once('keydown-Y', () => {
                 this.restoreState(JSON.parse(savedState)); // Load the saved state
                 promptText.setText('Game Loaded!');
-                this.time.delayedCall(1000, () => promptText.destroy()); // Destroy text after 1 second
+                this.undoStack = [this.getCurrentState()]; // Reset undo stack after loading game state
+                this.redoStack = []; // Clear redo stack
+                this.time.delayedCall(1000, () => promptText.destroy());
             });
-        
+    
             this.input.keyboard.once('keydown-N', () => {
-                localStorage.removeItem('gameState'); // Clear any saved game state
+                localStorage.removeItem('gameState'); // Clear saved state
                 promptText.setText('Starting a new game...');
-                this.time.delayedCall(1000, () => promptText.destroy()); // Destroy text after 1 second
+                this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
+                this.redoStack = []; // Reset redo stack
+                this.time.delayedCall(1000, () => promptText.destroy());
             });
         } else {
-            // If no saved state, simply inform the player
+            // Handle case for no saved state
             const promptText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 
                 'No saved game found. Starting a new game...', 
                 { font: '20px Arial', color: '#ff0000', wordWrap: { width: 500 } }
             ).setOrigin(0.5, 0.5);
-    
-            // Automatically remove the prompt text after 1 second
+            
+            this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
+            this.redoStack = []; // Initialize redo stack
             this.time.delayedCall(1000, () => promptText.destroy());
         }
     }
     
+    
     setupSaveLoadButtons() {
-        // Create Save button
-        const saveButton = this.add.text(350, 70, 'Save Game', {
-            fontSize: '20px',
-            backgroundColor: '#21a99c',
-            padding: { x: 20, y: 10 },
-            align: 'center'
-        }).setInteractive();
+        for (let slot = 1; slot <= 3; slot++) {
+            const saveButton = this.add.text(350, 70 + (slot - 1) * 50, `Save Slot ${slot}`, {
+                fontSize: '20px',
+                backgroundColor: '#21a99c',
+                padding: { x: 20, y: 10 },
+                align: 'center'
+            }).setInteractive();
     
-        saveButton.on('pointerdown', () => {
-            this.saveGameState();
-            console.log("Game saved");
-        });
+            saveButton.on('pointerdown', () => {
+                const currentState = this.getCurrentState();
+                localStorage.setItem(`gameStateSlot${slot}`, JSON.stringify(currentState));
+                console.log(`Game saved to slot ${slot}`);
+                const promptText = this.add.text(
+                    this.cameras.main.width / 2,
+                    this.cameras.main.height / 2,
+                    `Saved to slot ${slot}`,
+                    { font: '20px Arial', color: '#ffffff' }
+                ).setOrigin(0.5, 0.5);
     
-        // Create Load button
-        const loadButton = this.add.text(350, 120, 'Load Game', {
-            fontSize: '20px',
-            backgroundColor: '#21a99c',
-            padding: { x: 20, y: 10 },
-            align: 'center'
-        }).setInteractive();
+                this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
+            });
+        }
     
-        loadButton.on('pointerdown', () => {
-            this.handleGameStatePrompt(); // Check if there's a saved game and prompt the user
-        });
+        // Load buttons for slots
+        for (let slot = 1; slot <= 3; slot++) {
+            const loadButton = this.add.text(500, 70 + (slot - 1) * 50, `Load Slot ${slot}`, {
+                fontSize: '20px',
+                backgroundColor: '#21a99c',
+                padding: { x: 20, y: 10 },
+                align: 'center'
+            }).setInteractive();
+    
+            loadButton.on('pointerdown', () => {
+                this.loadGameState(slot);
+            });
+        }
     }
+
     setupUndoRedoButtons() {
         // Create Undo button
         const undoButton = this.add.text(30, 20, 'Undo', {
@@ -519,23 +548,43 @@ class Play extends Phaser.Scene {
             console.log("Redo action performed");
         });
     }
-    // Displays water and sun levels near the selected field
-// Displays water and sun levels in the same fixed corner (e.g., top-left corner)
+    loadGameState(slot = 1) {
+        const savedState = localStorage.getItem(`gameStateSlot${slot}`);
+        if (savedState) {
+            this.restoreState(JSON.parse(savedState)); // Restore the saved state
+            console.log(`Game state loaded from slot ${slot}`);
+            const promptText = this.add.text(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                `Loaded save slot ${slot}`,
+                { font: '20px Arial', color: '#ffffff' }
+            ).setOrigin(0.5, 0.5);
+
+            this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
+        } else {
+            console.log(`No saved game found in slot ${slot}`);
+            const promptText = this.add.text(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                `No save found in slot ${slot}`,
+                { font: '20px Arial', color: '#ff0000' }
+            ).setOrigin(0.5, 0.5);
+
+            this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
+        }
+    }
 showWaterAndSunText(field) {
-    // Remove any existing water and sun text
     if (this.waterText) {
         this.waterText.destroy();
     }
     if (this.sunText) {
         this.sunText.destroy();
     }
-
-    // Display water level text at a fixed position
     this.waterText = this.add.text(
-        20, // X position in the corner
-        70, // Y position in the corner (slightly offset from top-left)
+        20, 
+        70, 
         `Water: ${field.waterLevel}`, 
-        { font: '14px Arial', fill: '#0000ff' }
+        { font: '14px Arial', fill: 'white' }
     );
 
     // Display sun level text at a fixed position, just below the water level text
@@ -543,7 +592,7 @@ showWaterAndSunText(field) {
         20, 
         90, 
         `Sun: ${field.sunLevel}`,
-        { font: '14px Arial', fill: '#ffcc00' }
+        { font: '14px Arial', fill: 'white' }
     );
 }
 }
