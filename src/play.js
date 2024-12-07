@@ -473,16 +473,23 @@ class Play extends Phaser.Scene {
         const savedState = localStorage.getItem('gameState');
         if (savedState) {
             const promptText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 
-                'Do you want to load the saved game? Y/N.', 
+                `${Localization.get('auto-save')}`, 
                 { font: '20px Arial', color: '#ff0000', wordWrap: { width: 500 } }
             ).setOrigin(0.5, 0.5);
+            const text = promptText;
+            if (text) {
+                text.setText(`${Localization.get('auto-save')}`);
+            }
     
             this.input.keyboard.once('keydown-Y', () => {
                 this.restoreState(JSON.parse(savedState)); // Load the saved state
-                promptText.setText('Game Loaded!');
+                promptText.setText(`${Localization.get('loaded')}`);
                 this.undoStack = [this.getCurrentState()]; // Reset undo stack after loading game state
                 this.redoStack = []; // Clear redo stack
                 this.time.delayedCall(1000, () => promptText.destroy());
+                if (promptText) {
+                    promptText.setText(`${Localization.get('loaded')}`);
+                }
             });
     
             this.input.keyboard.once('keydown-N', () => {
@@ -490,6 +497,9 @@ class Play extends Phaser.Scene {
                 promptText.setText('Starting a new game...');
                 this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
                 this.redoStack = []; // Reset redo stack
+                if (promptText) {
+                    promptText.setText(`${Localization.get('new')}`);
+                }
                 this.time.delayedCall(1000, () => promptText.destroy());
             });
         } else {
@@ -503,6 +513,8 @@ class Play extends Phaser.Scene {
             this.redoStack = []; // Initialize redo stack
             this.time.delayedCall(1000, () => promptText.destroy());
         }
+        
+
     }
     
     
