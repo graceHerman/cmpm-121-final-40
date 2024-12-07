@@ -494,7 +494,7 @@ class Play extends Phaser.Scene {
     
             this.input.keyboard.once('keydown-N', () => {
                 localStorage.removeItem('gameState'); // Clear saved state
-                promptText.setText('Starting a new game...');
+                promptText.setText(`${Localization.get('new')}`);
                 this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
                 this.redoStack = []; // Reset redo stack
                 if (promptText) {
@@ -505,7 +505,7 @@ class Play extends Phaser.Scene {
         } else {
             // Handle case for no saved state
             const promptText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 
-                'No saved game found. Starting a new game...', 
+                `${Localization.get('no-save2')}`, 
                 { font: '20px Arial', color: '#ff0000', wordWrap: { width: 500 } }
             ).setOrigin(0.5, 0.5);
             
@@ -618,6 +618,9 @@ class Play extends Phaser.Scene {
             ).setOrigin(0.5, 0.5);
             if (promptText) {
                 promptText.setText(`${Localization.get('load')} ${slot}`);
+            }
+            if (promptText) {
+                this.promptText.setText(`${Localization.get('no-save2')}`);
             }
 
             this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
