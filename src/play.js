@@ -430,7 +430,7 @@ class Play extends Phaser.Scene {
             field.sunLevel = savedField.sunLevel;
             field.sprite.setTexture(savedField.plantTexture); 
             this.counterText?.setText(`Plants at stage 3: ${this.stage3Counter}`);
-    this.dayText?.setText(`Days: ${this.dayCounter}`);
+    this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
     console.log("State restored, updating UI."); // Restore the texture
         });
     
@@ -441,7 +441,7 @@ class Play extends Phaser.Scene {
     
         // Restore counters
         this.dayCounter = state.dayCounter || 0;
-        this.dayText.setText(`Days: ${this.dayCounter}`);
+        this.dayText.setText(`${Localization.get('days')}: ${this.dayCounter}`);
         this.stage3Counter = state.stage3Counter || 0;
         this.counterText.setText(`Plants at stage 3: ${this.stage3Counter}`);
     }
@@ -597,9 +597,13 @@ class Play extends Phaser.Scene {
             const promptText = this.add.text(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2,
-                `Loaded save slot ${slot}`,
+                `${Localization.get('load')} ${slot}`,
                 { font: '20px Arial', color: '#ffffff' }
             ).setOrigin(0.5, 0.5);
+            if (promptText) {
+                promptText.setText(`${Localization.get('load')}`);
+            }
+
 
             this.time.delayedCall(1000, () => promptText.destroy()); // Remove text after 1 second
         } else {
@@ -624,7 +628,7 @@ showWaterAndSunText(field) {
     this.waterText = this.add.text(
         20, 
         70, 
-        `Water: ${field.waterLevel}`, 
+        `${Localization.get('water')}: ${field.waterLevel}`, 
         { font: '14px Arial', fill: 'white' }
     );
 
@@ -632,7 +636,7 @@ showWaterAndSunText(field) {
     this.sunText = this.add.text(
         20, 
         90, 
-        `Sun: ${field.sunLevel}`,
+        `${Localization.get('sun')}: ${field.sunLevel}`,
         { font: '14px Arial', fill: 'white' }
     );
 }
@@ -656,6 +660,12 @@ updateLocalizedText() {
     }
     if (this.redoButton) {
         this.redoButton.setText(Localization.get('redo'));
+    }
+    if (this.sunText) {
+        this.sunText.setText(Localization.get('sun'));
+    }
+    if (this.waterText) {
+        this.waterText.setText(Localization.get('water'));
     }    
 }
 }
