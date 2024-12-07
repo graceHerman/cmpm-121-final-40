@@ -51,5 +51,9 @@ window.onload = () => {
 
 // Change language based on the selection
 function changeLanguage(languageCode) {
-    Localization.loadLanguage(languageCode);
+    Localization.loadLanguage(languageCode).then(() => {
+        // Dispatch a custom event to notify the Phaser game about the language change
+        const languageChangedEvent = new Event('languageChanged');
+        document.dispatchEvent(languageChangedEvent);
+    });
 }

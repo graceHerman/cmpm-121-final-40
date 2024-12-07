@@ -109,20 +109,20 @@ class Play extends Phaser.Scene {
         this.dayText = this.add.text(
             50,
             this.cameras.main.height - 6,
-            `Days: ${this.dayCounter}`,
+            `${Localization.get('days')}: ${this.dayCounter}`,
             { font: '20px Arial' }
         );
         this.dayText.setOrigin(0.5, 1);
 
-        const button = this.add.text(350, 20, 'Next Day', {
+        this.nextDayButton = this.add.text(320, 20, Localization.get('next_day'), {
             fontSize: '20px',
             backgroundColor: '#21a99c',
             padding: { x: 20, y: 10 },
             align: 'center'
         }).setInteractive();
-        button.on('pointerdown', () => {
+        this.nextDayButton.on('pointerdown', () => {
             this.dayCounter++;
-            this.dayText?.setText(`Days: ${this.dayCounter}`);
+            this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
             this.assignRandomLevels();
             this.saveGameState();
         });
@@ -142,6 +142,9 @@ class Play extends Phaser.Scene {
         this.setupUndoRedoButtons();
 
         this.undoStack.push(this.getCurrentState()); // Initialize undo stack
+
+        // Listen for language changes and update texts
+        document.addEventListener('languageChanged', this.updateLocalizedText.bind(this));
     }
 
     update() {
@@ -505,7 +508,7 @@ class Play extends Phaser.Scene {
     
     setupSaveLoadButtons() {
         for (let slot = 1; slot <= 3; slot++) {
-            const saveButton = this.add.text(350, 70 + (slot - 1) * 50, `Save Slot ${slot}`, {
+            const saveButton = this.add.text(320, 70 + (slot - 1) * 50, `Save Slot ${slot}`, {
                 fontSize: '20px',
                 backgroundColor: '#21a99c',
                 padding: { x: 20, y: 10 },
@@ -616,5 +619,15 @@ showWaterAndSunText(field) {
         `Sun: ${field.sunLevel}`,
         { font: '14px Arial', fill: 'white' }
     );
+}
+
+// Function to update localized texts in the game
+updateLocalizedText() {
+    if (this.dayText) {
+        this.dayText.setText(`${Localization.get('days')}: ${this.dayCounter}`);
+    }
+    if (this.nextDayButton) {
+        this.nextDayButton.setText(Localization.get('next_day'));
+    }
 }
 }

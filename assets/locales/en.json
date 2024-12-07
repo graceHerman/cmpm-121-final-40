@@ -4,8 +4,22 @@
     "welcome_message": "Welcome to the Game!",
 
     "next_day": "Next Day",
-    "days": "Days: ",
+    "days": "Day",
     "reap": "Reap",
     "sow": "Sow",
+    "sunflower": "Sunflower",
+    "mushroom": "Mushroom",
+    "herb": "Herb",
+    "save": "Save Slot ",
+    "undo": "Undo",
+    "redo": "Redo",
+    "saved": "Saved to slot",
+    "auto-save": "Do you want to load game? Y/N.",
+    "load": "Loaded save slot ",
+    "loaded": "Game loaded!",
+    "new": "Starting a new game...",
+    "stage3": "Plants at stage 3: ",
+    "water": "Water: ",
+    "sun": "Sun: ",
     "you_win": "You Win!"
   }
