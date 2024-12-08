@@ -1,0 +1,28 @@
+{
+  "button_start": "Comenzar",
+  "button_exit": "Pausa",
+  "welcome_message": "¡Bienvenido al juego!",
+
+    "next_day": "Siguiente Día",
+    "days": "Días: ",
+    "reap": "Cosechar",
+    "sow": "Sembrar",
+    "Sunflower": "Girasol",
+    "Mushroom": "Hongo",
+    "Herb": "Hierba",
+    "save": "Guardar ranura",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "saved": "Guardado en la ranura",
+    "auto-save": "¿Quieres cargar el juego? Y/N.",
+    "load": "Ranura de guardado cargada ",
+    "loaded": "¡Juego cargado!",
+    "new": "Iniciando un juego nuevo...",
+    "stage3": "Plantas en etapa 3",
+    "water": "Agua",
+    "sun": "Sol",
+    "no-save": "No se encontró ninguna partida en la ranura",
+    "no-save2": "No se encontró ninguna partida guardada. Iniciando un nuevo juego...",
+    "you_win": "¡Ganaste!"
+  }
+  

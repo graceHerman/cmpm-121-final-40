@@ -1,0 +1,27 @@
+{
+    "button_start": "开始游戏",
+    "button_exit": "退出",
+    "welcome_message": "欢迎来到游戏!",
+
+    "next_day": "下一天",
+    "days": "天数：",
+    "reap": "收获",
+    "sow": "播种",
+    "Sunflower": "向日葵",
+    "Mushroom": "蘑菇",
+    "Herb": "草药",
+    "save": "保存槽",
+    "undo": "撤销",
+    "redo": "重做",
+    "saved": "已保存到槽",
+    "auto-save": "是否加载游戏？Y/N。",
+    "load": "已加载保存槽 ",
+    "loaded": "游戏已加载！",
+    "new": "开始新游戏...",
+    "stage3": "第3阶段的植物",
+    "water": "水",
+    "sun": "阳光",
+    "no-save": "未在槽位中找到保存",
+    "no-save2": "未找到已保存的游戏。正在开始新游戏...",
+    "you_win": "你赢了!"
+  }
