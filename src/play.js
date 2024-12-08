@@ -115,7 +115,6 @@ class Play extends Phaser.Scene {
             { font: '20px Arial' }
         );
         this.dayText.setOrigin(0.5, 1);
-        this.undoStack.push(this.getCurrentState());
 
         this.nextDayButton = this.add.text(320, 20, Localization.get('next_day'), {
             fontSize: '20px',
@@ -198,7 +197,6 @@ class Play extends Phaser.Scene {
                     if (field.plantLevel === 1) {
                         this.updatePlantTexture(field, 2);
                         field.waterLevel -= adjustedWaterThreshold;
-                        this.undoStack.push(this.getCurrentState());
                     }   
                 }
     
@@ -207,7 +205,6 @@ class Play extends Phaser.Scene {
                         this.updatePlantTexture(field, 3);
                         this.incrementCounter();
                         field.waterLevel -= finalWaterThreshold;
-                        this.undoStack.push(this.getCurrentState());
                     }
                 }
             })
