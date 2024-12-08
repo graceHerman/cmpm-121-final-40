@@ -125,6 +125,7 @@ class Play extends Phaser.Scene {
         this.nextDayButton.on('pointerdown', () => {
             this.dayCounter++;
             this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
+            this.undoStack.push(this.getCurrentState());
             this.assignRandomLevels();
             this.saveGameState();
         });
@@ -150,19 +151,36 @@ class Play extends Phaser.Scene {
     }
 
     update() {
-        if (this.farmer) {
-            const moveSpeed = 3;
-            if (this.keyA && this.keyA.isDown) {
-                this.farmer.x -= moveSpeed;
-            } else if (this.keyD && this.keyD.isDown) {
-                this.farmer.x += moveSpeed;
+        const moveSpeed = 3;
+    if (this.farmer) {
+        if (this.keyA && this.keyA.isDown) {
+            if (!this.movementTracked) { // Ensure state is only pushed once per movement
+                this.undoStack.push(this.getCurrentState());
+                this.movementTracked = true;
             }
-            if (this.keyW && this.keyW.isDown) {
-                this.farmer.y -= moveSpeed;
-            } else if (this.keyS && this.keyS.isDown) {
-                this.farmer.y += moveSpeed;
+            this.farmer.x -= moveSpeed;
+        } else if (this.keyD && this.keyD.isDown) {
+            if (!this.movementTracked) {
+                this.undoStack.push(this.getCurrentState());
+                this.movementTracked = true;
             }
+            this.farmer.x += moveSpeed;
+        } else if (this.keyW && this.keyW.isDown) {
+            if (!this.movementTracked) {
+                this.undoStack.push(this.getCurrentState());
+                this.movementTracked = true;
+            }
+            this.farmer.y -= moveSpeed;
+        } else if (this.keyS && this.keyS.isDown) {
+            if (!this.movementTracked) {
+                this.undoStack.push(this.getCurrentState());
+                this.movementTracked = true;
+            }
+            this.farmer.y += moveSpeed;
+        } else {
+            this.movementTracked = false; // Reset when no movement
         }
+    }
     
         if (this.fields && this.fields.length > 0) {
             this.fields.forEach(field => {
@@ -179,6 +197,7 @@ class Play extends Phaser.Scene {
                     if (field.plantLevel === 1) {
                         this.updatePlantTexture(field, 2);
                         field.waterLevel -= adjustedWaterThreshold;
+                        this.undoStack.push(this.getCurrentState());
                     }
                 }
     
@@ -187,6 +206,7 @@ class Play extends Phaser.Scene {
                         this.updatePlantTexture(field, 3);
                         this.incrementCounter();
                         field.waterLevel -= finalWaterThreshold;
+                        this.undoStack.push(this.getCurrentState());
                     }
                 }
             });
@@ -208,12 +228,14 @@ class Play extends Phaser.Scene {
         if (this.counterText) {
             this.counterText.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
         }
+        this.undoStack.push(this.getCurrentState());
     }
 
     assignRandomLevels() {
         this.fields.forEach(field => {
             field.waterLevel += Phaser.Math.Between(0, 10);
             field.sunLevel = Phaser.Math.Between(0, 100);
+            this.undoStack.push(this.getCurrentState());
         });
         //console.log("Random levels assigned to fields:", this.fields);
     }
@@ -241,7 +263,6 @@ class Play extends Phaser.Scene {
         this.reapButton.on('pointerdown', () => {
             console.log(`Reaped field ${field.index}`);
             this.undoStack.push(this.getCurrentState()); // Save the current state before reaping
-            this.redoStack = [];  // Clear redo stack after a new action
             field.sprite.setTexture('field');
             
             // Reset plant state
@@ -256,7 +277,6 @@ class Play extends Phaser.Scene {
         // Sow button functionality
         this.sowButton.on('pointerdown', () => {
             this.undoStack.push(this.getCurrentState()); // Save the current state before sowing
-            this.redoStack = [];
             this.showSowMenu(field);
             this.saveGameState();
         });
@@ -310,7 +330,6 @@ class Play extends Phaser.Scene {
             this.updatePlantTexture(field, 0);
             this.stage3Counter--;
             
-            this.redoStack = [];
             this.counterText?.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
         } else {
             console.log(`No plant to reap in field ${field.index}`);
@@ -323,7 +342,6 @@ class Play extends Phaser.Scene {
             this.undoStack.push(this.getCurrentState());
             this.createPlantSelectionMenu(field);
             
-            this.redoStack = [];
         } else {
             console.log(`Field ${field.index} already has a plant`);
         }
@@ -411,7 +429,7 @@ class Play extends Phaser.Scene {
         this.undoStack.push(currentState);  // Always push the current state to undo stack
         localStorage.setItem('gameState', JSON.stringify(currentState));  // Save to localStorage
         //console.log("Game state saved", currentState);  // For debugging
-        this.redoStack = [];  // Clear redo stack after a new action
+        //this.redoStack = [];  // Clear redo stack after a new action
     }
     
     getCurrentState() {
@@ -458,13 +476,13 @@ class Play extends Phaser.Scene {
 
     undo() {
         if (this.undoStack.length > 1) {
+            console.log("undoStack length before: " + this.undoStack.length);
             const currentState = this.undoStack.pop(); // Remove the current state
+            console.log("currentState length: " + this.undoStack.length);
+            console.log("redo stack length before: " + this.redoStack.length);
             this.redoStack.push(currentState); // Save it to the redo stack
-            console.log("redo stack: " + this.redoStack[0]);
-            console.log("undo stack length before: " + this.undoStack.length);
+            console.log("redo stack length after: " + this.redoStack.length);
             const previousState = this.undoStack[this.undoStack.length - 1];
-            console.log("Removing object in undoStack: " + this.undoStack[this.undoStack.length - 1].plantLevel);
-            console.log("undo stack length after: " + this.undoStack.length);
             this.restoreState(previousState); // Restore the previous state
             console.log("Undo performed", previousState);
         } else {
@@ -473,11 +491,11 @@ class Play extends Phaser.Scene {
     }
     
     redo() {
+        console.log("redo stack in redo function: " + this.redoStack.length);
         if (this.redoStack.length > 0) {
             const redoState = this.redoStack.pop(); // Remove redo state
             this.undoStack.push(redoState); // Save it to the undo stack
-            //this.restoreState(redoState); // Restore the redo state
-            this.restoreState(JSON.parse(redoState));
+            this.restoreState(redoState); // Restore the redo state
             console.log("Redo performed", redoState);
             console.log("Redo state: ", redoState);
         } else {
@@ -545,8 +563,6 @@ class Play extends Phaser.Scene {
             this.time.delayedCall(1000, () => promptText.destroy());
             
         }
-    
-
     }
     
     
@@ -628,6 +644,8 @@ class Play extends Phaser.Scene {
         if (savedState) {
             this.restoreState(JSON.parse(savedState)); // Restore the saved state
             console.log(`Game state loaded from slot ${slot}`);
+            this.undoStack = [this.getCurrentState()];
+            this.redoStack = [];
             const promptText = this.add.text(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2,
