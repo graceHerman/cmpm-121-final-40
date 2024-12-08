@@ -115,6 +115,7 @@ class Play extends Phaser.Scene {
             { font: '20px Arial' }
         );
         this.dayText.setOrigin(0.5, 1);
+        this.undoStack.push(this.getCurrentState());
 
         this.nextDayButton = this.add.text(320, 20, Localization.get('next_day'), {
             fontSize: '20px',
@@ -124,8 +125,8 @@ class Play extends Phaser.Scene {
         }).setInteractive();
         this.nextDayButton.on('pointerdown', () => {
             this.dayCounter++;
-            this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
             this.undoStack.push(this.getCurrentState());
+            this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
             this.assignRandomLevels();
             this.saveGameState();
         });
@@ -198,7 +199,7 @@ class Play extends Phaser.Scene {
                         this.updatePlantTexture(field, 2);
                         field.waterLevel -= adjustedWaterThreshold;
                         this.undoStack.push(this.getCurrentState());
-                    }
+                    }   
                 }
     
                 if (field.waterLevel >= finalAdjustedWaterThreshold && field.sunLevel >= finalSunThreshold) {
@@ -209,7 +210,7 @@ class Play extends Phaser.Scene {
                         this.undoStack.push(this.getCurrentState());
                     }
                 }
-            });
+            })
         }
     
         if (this.stage3Counter >= 10) {
@@ -235,7 +236,6 @@ class Play extends Phaser.Scene {
         this.fields.forEach(field => {
             field.waterLevel += Phaser.Math.Between(0, 10);
             field.sunLevel = Phaser.Math.Between(0, 100);
-            this.undoStack.push(this.getCurrentState());
         });
         //console.log("Random levels assigned to fields:", this.fields);
     }
@@ -318,6 +318,7 @@ class Play extends Phaser.Scene {
                 field.sprite.setTexture(key);
                 field.plantLevel = 1;
                 choiceTexts.forEach(text => text.destroy());  // Remove plant choice buttons
+                this.undoStack.push(this.getCurrentState());
             });
             choiceTexts.push(choiceText);
         });
