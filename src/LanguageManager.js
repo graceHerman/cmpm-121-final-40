@@ -31,6 +31,13 @@ class Localization {
         elements.forEach((element) => {
             const key = element.getAttribute('data-localize');
             console.log("key: " + key);
+
+            // Prevent redisplaying the auto-save message if the flag is false
+            if (key === 'auto-save' && !shouldDisplayAutoSave) {
+                element.textContent = ''; 
+                return; 
+            }
+
             element.textContent = this.get(key);  // Set the element's text to the translated value
             console.log("element.textContent: " + element.textContent);
         });

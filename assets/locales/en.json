@@ -7,9 +7,9 @@
     "days": "Day",
     "reap": "Reap",
     "sow": "Sow",
-    "sunflower": "Sunflower",
-    "mushroom": "Mushroom",
-    "herb": "Herb",
+    "Sunflower": "Sunflower",
+    "Mushroom": "Mushroom",
+    "Herb": "Herb",
     "save": "Save Slot ",
     "undo": "Undo",
     "redo": "Redo",
@@ -22,5 +22,6 @@
     "water": "Water: ",
     "sun": "Sun: ",
     "no-save": "No save found in slot",
+    "no-save2": "No saved game found. Starting a new game...",
     "you_win": "You Win!"
   }

@@ -7,9 +7,9 @@
     "days": "天数：",
     "reap": "收获",
     "sow": "播种",
-    "sunflower": "向日葵",
-    "mushroom": "蘑菇",
-    "herb": "草药",
+    "Sunflower": "向日葵",
+    "Mushroom": "蘑菇",
+    "Herb": "草药",
     "save": "保存槽 ",
     "undo": "撤销",
     "redo": "重做",
@@ -22,5 +22,6 @@
     "water": "水：",
     "sun": "阳光：",
     "no-save": "未在槽位中找到保存",
+    "no-save2": "未找到已保存的游戏。正在开始新游戏...",
     "you_win": "你赢了!"
   }

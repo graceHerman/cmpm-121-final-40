@@ -1,3 +1,5 @@
+let shouldDisplayAutoSave = true;
+
 class Play extends Phaser.Scene {
     constructor() {
         super("playScene");
@@ -194,7 +196,7 @@ class Play extends Phaser.Scene {
             this.winText = this.add.text(
                 this.cameras.main.width / 2,
                 this.cameras.main.height / 2,
-                `You Win!`,
+                `${Localization.get('you_win')}`,
                 { font: '100px Arial', fontStyle: 'bold', color: '#21a99c' }
             );
             this.winText.setOrigin(0.5, 0.5);
@@ -272,13 +274,19 @@ class Play extends Phaser.Scene {
     
     showSowMenu(field) {
         // Show plant choices near the selected field
+        const sunflower = Localization.get('sunflower');
+        const mushroom = Localization.get('mushroom');
+        const herb = Localization.get('herb');
+
         const options = ['Sunflower', 'Mushroom', 'Herb'];
         const optionY = field.sprite.y - 20;
         const choiceTexts = [];
     
         options.forEach((key, index) => {
+            const localizedText = Localization.get(key);
+
             // Create button for each option
-            const choiceText = this.add.text(field.sprite.x + index * 80 - 80, optionY, key, {
+            const choiceText = this.add.text(field.sprite.x + index * 80 - 80, optionY, localizedText, {
                 fontSize: '12px',
                 backgroundColor: '#358f39',
                 padding: { x: 5, y: 2 },
@@ -402,7 +410,7 @@ class Play extends Phaser.Scene {
         const currentState = this.getCurrentState();
         this.undoStack.push(currentState);  // Always push the current state to undo stack
         localStorage.setItem('gameState', JSON.stringify(currentState));  // Save to localStorage
-        console.log("Game state saved", currentState);  // For debugging
+        //console.log("Game state saved", currentState);  // For debugging
         this.redoStack = [];  // Clear redo stack after a new action
     }
     
@@ -428,10 +436,7 @@ class Play extends Phaser.Scene {
             field.plantLevel = savedField.plantLevel;
             field.waterLevel = savedField.waterLevel;
             field.sunLevel = savedField.sunLevel;
-            field.sprite.setTexture(savedField.plantTexture); 
-            this.counterText?.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
-    this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
-    console.log("State restored, updating UI."); // Restore the texture
+            field.sprite.setTexture(savedField.plantTexture); // Restore texture
         });
     
         // Restore farmer position
@@ -441,30 +446,42 @@ class Play extends Phaser.Scene {
     
         // Restore counters
         this.dayCounter = state.dayCounter || 0;
-        this.dayText.setText(`${Localization.get('days')}: ${this.dayCounter}`);
         this.stage3Counter = state.stage3Counter || 0;
-        this.counterText.setText(`${Localization.get('stage3')} ${this.stage3Counter}`);
+    
+        // Update UI
+        this.counterText?.setText(`${Localization.get('stage3')}: ${this.stage3Counter}`);
+        this.dayText?.setText(`${Localization.get('days')}: ${this.dayCounter}`);
+
+        console.log("State restored:", state);
     }
+    
+
     undo() {
         if (this.undoStack.length > 1) {
-            const currentState = this.undoStack.pop(); // Remove the latest state
-            this.redoStack.push(currentState); // Save the current state for redo
-            const previousState = this.undoStack[this.undoStack.length - 1]; // Peek at the new top of the stack
+            const currentState = this.undoStack.pop(); // Remove the current state
+            this.redoStack.push(currentState); // Save it to the redo stack
+            console.log("redo stack: " + this.redoStack[0]);
+            console.log("undo stack length before: " + this.undoStack.length);
+            const previousState = this.undoStack[this.undoStack.length - 1];
+            console.log("Removing object in undoStack: " + this.undoStack[this.undoStack.length - 1].plantLevel);
+            console.log("undo stack length after: " + this.undoStack.length);
             this.restoreState(previousState); // Restore the previous state
-            console.log('Undo performed.');
+            console.log("Undo performed", previousState);
         } else {
-            console.log("Nothing to undo.");
+            console.log("Nothing to undo");
         }
     }
     
     redo() {
         if (this.redoStack.length > 0) {
-            const nextState = this.redoStack.pop(); // Get the most recent undone state
-            this.undoStack.push(this.getCurrentState()); // Save the current state to the undo stack
-            this.restoreState(nextState); // Restore the state
-            console.log('Redo performed.');
+            const redoState = this.redoStack.pop(); // Remove redo state
+            this.undoStack.push(redoState); // Save it to the undo stack
+            //this.restoreState(redoState); // Restore the redo state
+            this.restoreState(JSON.parse(redoState));
+            console.log("Redo performed", redoState);
+            console.log("Redo state: ", redoState);
         } else {
-            console.log("Nothing to redo.");
+            console.log("Nothing to redo");
         }
     }
     
@@ -476,20 +493,31 @@ class Play extends Phaser.Scene {
                 `${Localization.get('auto-save')}`, 
                 { font: '20px Arial', color: '#ff0000', wordWrap: { width: 500 } }
             ).setOrigin(0.5, 0.5);
-            const text = promptText;
-            if (text) {
-                text.setText(`${Localization.get('auto-save')}`);
-            }
+            if (promptText) {
+                promptText.setText(`${Localization.get('auto-save')}`);
+                console.log("Auto-save message: " + `${Localization.get('auto-save')}`);
+            } 
+
+            // Function to clear the HTML element's text
+            const clearHtmlText = () => {
+                const autoSaveElement = document.querySelector('[data-localize="auto-save"]');
+                if (autoSaveElement) {
+                    autoSaveElement.textContent = ''; // Clear the text
+                }
+            };
     
             this.input.keyboard.once('keydown-Y', () => {
                 this.restoreState(JSON.parse(savedState)); // Load the saved state
                 promptText.setText(`${Localization.get('loaded')}`);
                 this.undoStack = [this.getCurrentState()]; // Reset undo stack after loading game state
                 this.redoStack = []; // Clear redo stack
-                this.time.delayedCall(1000, () => promptText.destroy());
+                shouldDisplayAutoSave = false;
                 if (promptText) {
                     promptText.setText(`${Localization.get('loaded')}`);
                 }
+
+                this.time.delayedCall(1000, () => promptText.destroy());
+                clearHtmlText();
             });
     
             this.input.keyboard.once('keydown-N', () => {
@@ -497,11 +525,14 @@ class Play extends Phaser.Scene {
                 promptText.setText(`${Localization.get('new')}`);
                 this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
                 this.redoStack = []; // Reset redo stack
+                shouldDisplayAutoSave = false;
                 if (promptText) {
                     promptText.setText(`${Localization.get('new')}`);
                 }
                 this.time.delayedCall(1000, () => promptText.destroy());
+                clearHtmlText();
             });
+
         } else {
             // Handle case for no saved state
             const promptText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 
@@ -512,8 +543,9 @@ class Play extends Phaser.Scene {
             this.undoStack = [this.getCurrentState()]; // Initialize undo stack for new game
             this.redoStack = []; // Initialize redo stack
             this.time.delayedCall(1000, () => promptText.destroy());
+            
         }
-        
+    
 
     }
     
@@ -677,7 +709,10 @@ updateLocalizedText() {
     }
     if (this.counterText) {
         this.counterText.setText(`${Localization.get('stage3')} ${this.stage3Counter}`);
-    }    
+    }   
+    if (this.winText) {
+        this.winText.setText(`${Localization.get('you_win')}`);
+    } 
 }
 }
 
